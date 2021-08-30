@@ -27,5 +27,9 @@ assert 0 '-5+5'
 assert 10 '-10+20'
 assert 0 '-(3+5) + 8'
 assert 1 '-3*+5 + 16'
+assert 1 '11==11'
+assert 0 '12!=12'
+assert 1 '1<=2>=2==0'
+assert 1 '(12 + 2 + 1) == 3 * 5 *1'
 
 echo OK
