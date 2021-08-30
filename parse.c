@@ -5,7 +5,6 @@
 #include <string.h>
 #include "9cc.h"
 
-
 // エラー箇所をを報告する
 void error_at(char *loc, char *fmt, ...)
 {
@@ -29,6 +28,18 @@ bool consume(char *op)
     return false;
   token = token->next;
   return true;
+}
+
+// 次のトークンが識別子のときには, トークンを1つ進めてトークンを返す
+// それ以外の場合には偽を返す
+Token *consume_ident()
+{
+  if (token->kind == TK_IDENT)
+  {
+    Token *tok = token;
+    token=token->next;
+    return tok;
+  }
 }
 
 // 次のトークンが期待している記号のときには, トークンを1つ進める
@@ -97,7 +108,7 @@ Token *tokenize(char *p)
     }
 
     // Single-letter punctuator
-    if (strchr("+-*/()<>", *p))
+    if (strchr("+-*/()<>=;", *p))
     {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
@@ -112,13 +123,18 @@ Token *tokenize(char *p)
       continue;
     }
 
+    if ('a' <= *p && *p <= 'z')
+    {
+      cur = new_token(TK_IDENT, cur, p++, 1);
+      continue;
+    }
+
     error_at(p, "トークナイズできません");
   }
 
   new_token(TK_EOF, cur, p, 0);
   return head.next;
 }
-
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
@@ -137,9 +153,41 @@ Node *new_node_num(int val)
   return node;
 }
 
+void *program()
+{
+  int i = 0;
+  while (!at_eof)
+  {
+    code[i++] = stmt();
+  }
+  code[i] = NULL;
+}
+
+Node *stmt()
+{
+  Node *node = expr();
+  expect(";");
+  return node;
+}
+
 Node *expr()
 {
-  return equality();
+  return assign();
+}
+
+Node *assign()
+{
+  Node *node = equality();
+
+  for (;;)
+  {
+    if (consume("="))
+    {
+      node = new_node(ND_ASSIGN, node, assign());
+      continue;
+    }
+    break;
+  }
 }
 
 Node *equality()
@@ -255,6 +303,14 @@ Node *primary()
     Node *node = expr();
     expect(")");
     return node;
+  }
+
+  Token *tok = consume_ident();
+  if (tok)
+  {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    node->offset = (tok->str[0] - 'a' + 1) * 8;
   }
 
   // そうでなければ数値のはず

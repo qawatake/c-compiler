@@ -7,6 +7,9 @@ Token *token;
 // 入力プログラム
 char *user_input;
 
+// 複数の式
+Node *code[100];
+
 int main(int argc, char **argv)
 {
   if (argc != 2)
