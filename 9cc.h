@@ -22,6 +22,10 @@ struct Token
   int len;        // トークンの長さ 整数, EOFの場合は0
 };
 
+// エラーを報告するための関数
+// printfと同じ引数を取る
+void error(char *fmt, ...);
+
 // エラー箇所をを報告する
 void error_at(char *loc, char *fmt, ...);
 

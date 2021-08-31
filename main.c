@@ -10,12 +10,21 @@ char *user_input;
 // 複数の式
 Node *code[100];
 
+// エラーを報告するための関数
+// printfと同じ引数を取る
+void error(char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
+
 int main(int argc, char **argv)
 {
   if (argc != 2)
   {
-    fprintf(stderr, "引数の個数が正しくありません\n");
-    return 1;
+    error("引数の個数が正しくありません");
   }
 
   // トークナイズしてパースする
