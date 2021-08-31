@@ -38,5 +38,6 @@ assert 6 'ret = 4; urn =2; return ret + urn;'
 assert 3 'return 3; return 4;'
 assert 2 'if (0 == 0) return 2;'
 assert 13 'a = 4; if (a / 2 == 2) return 13; return 20;'
+assert 8 'a = 5; if (a / 2 == 1) a = a * 2; if (a / 2 == 2) a = a + 3; return a;'
 
 echo OK

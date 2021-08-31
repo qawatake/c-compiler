@@ -15,6 +15,9 @@ char *user_input;
 // 複数の式
 Node *code[100];
 
+// ループの数
+int lnum = 0;
+
 // エラーを報告するための関数
 // printfと同じ引数を取る
 void error(char *fmt, ...) {

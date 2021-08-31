@@ -39,9 +39,10 @@ void gen(Node *node)
     gen(node->lhs);
     printf("  pop rax;\n");
     printf("  cmp rax, 0\n");
-    printf("  je .Lend\n");
+    printf("  je .Lend%x\n", lnum);
     gen(node->rhs);
-    printf(".Lend:\n");
+    printf(".Lend%x:\n", lnum);
+    lnum++;
     return;
   case ND_RETURN:
     gen(node->lhs);

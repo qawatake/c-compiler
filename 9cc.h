@@ -139,4 +139,7 @@ extern char *user_input;
 // 複数の式
 extern Node *code[100];
 
+// ループの数
+extern int lnum;
+
 #endif
