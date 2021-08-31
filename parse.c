@@ -40,6 +40,7 @@ Token *consume_ident()
     token=token->next;
     return tok;
   }
+  return NULL;
 }
 
 // 次のトークンが期待している記号のときには, トークンを1つ進める
@@ -156,7 +157,7 @@ Node *new_node_num(int val)
 void *program()
 {
   int i = 0;
-  while (!at_eof)
+  while (!at_eof())
   {
     code[i++] = stmt();
   }
@@ -188,6 +189,7 @@ Node *assign()
     }
     break;
   }
+  return node;
 }
 
 Node *equality()
@@ -311,6 +313,7 @@ Node *primary()
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
     node->offset = (tok->str[0] - 'a' + 1) * 8;
+    return node;
   }
 
   // そうでなければ数値のはず
