@@ -241,12 +241,30 @@ Node *stmt()
   }
   else if (consume("if"))
   {
-    expect("(");
     node = calloc(1, sizeof(Node));
     node->kind = ND_IF;
+    expect("(");
     node->lhs = expr();
     expect(")");
-    node->rhs = stmt();
+    Node *node_true;
+    node_true = stmt();
+    if (consume("else"))
+    {
+      Node *node_else = calloc(1, sizeof(Node));
+      node_else->kind = ND_ELSE;
+      node_else->lhs = node_true;
+      node_else->rhs = stmt();
+      node->rhs = node_else;
+    } else
+    {
+      node->rhs = node_true;
+    }
+    // expect("(");
+    // node = calloc(1, sizeof(Node));
+    // node->kind = ND_IF;
+    // node->lhs = expr();
+    // expect(")");
+    // node->rhs = stmt();
   }
   else
   {
