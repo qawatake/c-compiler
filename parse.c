@@ -84,6 +84,20 @@ bool startswith(char *p, char *q)
   return memcmp(p, q, strlen(q)) == 0;
 }
 
+// 変数を名前で検索する
+// 見つからなかった場合はNULLを返す
+LVar *find_lvar(Token *tok)
+{
+  for (LVar *var = locals; var; var = var->next)
+  {
+    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+    {
+      return var;
+    }
+  }
+  return NULL;
+}
+
 // 入力文字列 p をトークナイズしてそれを返す
 Token *tokenize(char *p)
 {
@@ -126,7 +140,14 @@ Token *tokenize(char *p)
 
     if ('a' <= *p && *p <= 'z')
     {
-      cur = new_token(TK_IDENT, cur, p++, 1);
+      char *q = p;
+      while ('a' <= *q && *q <= 'z')
+      {
+        q++;
+      }
+      cur = new_token(TK_IDENT, cur, p, 0);
+      cur->len = q - p;
+      p = q;
       continue;
     }
 
@@ -156,6 +177,8 @@ Node *new_node_num(int val)
 
 void *program()
 {
+  locals = calloc(1, sizeof(LVar));
+  locals->next = NULL;
   int i = 0;
   while (!at_eof())
   {
@@ -312,7 +335,21 @@ Node *primary()
   {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
-    node->offset = (tok->str[0] - 'a' + 1) * 8;
+    LVar *lvar = find_lvar(tok);
+    if (lvar)
+    {
+      node->offset = lvar->offset;
+    }
+    else
+    {
+      lvar = calloc(1, sizeof(LVar));
+      lvar->next = locals;
+      lvar->name = tok->str;
+      lvar->len = tok->len;
+      lvar->offset = locals->offset + 8;
+      node->offset = lvar->offset;
+      locals = lvar;
+    }
     return node;
   }
 

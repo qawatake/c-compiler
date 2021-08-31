@@ -6,6 +6,9 @@
 // 現在注目しているトークン
 Token *token;
 
+// ローカル変数
+LVar *locals;
+
 // 入力プログラム
 char *user_input;
 

@@ -22,6 +22,16 @@ struct Token
   int len;        // トークンの長さ 整数, EOFの場合は0
 };
 
+typedef struct LVar LVar;
+// ローカル変数
+struct LVar
+{
+  LVar *next; // 次の変数か NULL
+  char *name; // 変数の名前
+  int len;    // 変数の長さ
+  int offset; // ベースポインタ (RBP) からのオフセット
+};
+
 // エラーを報告するための関数
 // printfと同じ引数を取る
 void error(char *fmt, ...);
@@ -52,6 +62,10 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 
 // Multi-letter punctuator か判定
 bool startswith(char *p, char *q);
+
+// 変数を名前で検索する
+// 見つからなかった場合はNULLを返す
+LVar *find_lvar(Token *tok);
 
 // 入力文字列 p をトークナイズしてそれを返す
 Token *tokenize(char *p);
@@ -102,6 +116,9 @@ void gen(Node *node);
 
 // 現在注目しているトークン
 extern Token *token;
+
+// ローカル変数
+extern LVar *locals;
 
 // 入力プログラム
 extern char *user_input;

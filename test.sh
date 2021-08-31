@@ -33,5 +33,6 @@ assert 1 '1<=2>=2==0;'
 assert 1 '(12 + 2 + 1) == 3 * 5 *1;'
 assert 6 'a=3; a = a *2; a;'
 assert 12 'a=3; b=2; c= a * b; c *2;'
+assert 6 'abc = 4; d = 2; abc + d;'
 
 echo OK
