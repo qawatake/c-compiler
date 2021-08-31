@@ -97,6 +97,7 @@ Node *mul();
 Node *unary();
 Node *primary();
 
+void gen_lval(Node *node);
 void gen(Node *node);
 
 // 現在注目しているトークン
