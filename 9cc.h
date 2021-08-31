@@ -6,6 +6,7 @@
 typedef enum
 {
   TK_RESERVED, // 記号
+  TK_RETURN,   // return
   TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
   TK_EOF,      // 入力の終わりを表すトークン
@@ -63,6 +64,9 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 // Multi-letter punctuator か判定
 bool startswith(char *p, char *q);
 
+// 英数字かアンダースコアかどうかを判定
+bool is_alnum(char c);
+
 // 変数を名前で検索する
 // 見つからなかった場合はNULLを返す
 LVar *find_lvar(Token *tok);
@@ -82,6 +86,7 @@ typedef enum
   ND_L,      // <
   ND_LE,     // <=
   ND_ASSIGN, // =
+  ND_RETURN, // return
   ND_LVAR,   // ローカル変数
   ND_NUM,    // 整数
 } NodeKind;
