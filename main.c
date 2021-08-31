@@ -36,6 +36,15 @@ int main(int argc, char **argv)
   // トークナイズしてパースする
   user_input = argv[1];
   token = tokenize(user_input);
+  // for (;;)
+  // {
+  //   printf("%c %d\n", token->str[0], token->len);
+  //   if (token->kind == TK_EOF)
+  //   {
+  //     break;
+  //   }
+  //   token = token->next;
+  // }
   program();
 
   // アセンブリの前半部分を出力

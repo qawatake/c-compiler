@@ -91,6 +91,10 @@ typedef enum
   ND_LE,     // <=
   ND_ASSIGN, // =
   ND_RETURN, // return
+  ND_IF,     // if
+  ND_ELSE,   // else
+  ND_WHILE,  // while
+  ND_FOR,    //for
   ND_LVAR,   // ローカル変数
   ND_NUM,    // 整数
 } NodeKind;

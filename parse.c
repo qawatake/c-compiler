@@ -24,7 +24,9 @@ void error_at(char *loc, char *fmt, ...)
 // それ以外の場合には偽を返す
 bool consume(char *op)
 {
-  if ((token->kind != TK_RETURN && token->kind != TK_RESERVED) || token->len != strlen(op) || memcmp(token->str, op, token->len))
+  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR)
+    return false;
+  else if (token->len != strlen(op) || memcmp(token->str, op, token->len))
     return false;
   token = token->next;
   return true;
@@ -48,7 +50,7 @@ Token *consume_ident()
 void expect(char *op)
 {
   if (token->kind != TK_RESERVED || token->len != strlen(op) || memcmp(token->str, op, token->len))
-    error_at(token->str, "'%c'ではありません", op);
+    error_at(token->str, "'%s'ではありません", op);
   token = token->next;
 }
 
@@ -145,7 +147,7 @@ Token *tokenize(char *p)
 
     if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6]))
     {
-      cur = new_token(TK_RETURN, cur, p,  6);
+      cur = new_token(TK_RETURN, cur, p, 6);
       p += 6;
       continue;
     }
@@ -235,12 +237,22 @@ Node *stmt()
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
+    expect(";");
+  }
+  else if (consume("if"))
+  {
+    expect("(");
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_IF;
+    node->lhs = expr();
+    expect(")");
+    node->rhs = stmt();
   }
   else
   {
     node = expr();
+    expect(";");
   }
-  expect(";");
   return node;
 }
 

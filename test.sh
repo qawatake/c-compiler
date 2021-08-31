@@ -35,5 +35,8 @@ assert 6 'a=3; a = a *2; a;'
 assert 12 'a=3; b=2; c= a * b; c *2;'
 assert 6 'abc = 4; d = 2; abc + d;'
 assert 6 'ret = 4; urn =2; return ret + urn;'
+assert 3 'return 3; return 4;'
+assert 2 'if (0 == 0) return 2;'
+assert 13 'a = 4; if (a / 2 == 2) return 13; return 20;'
 
 echo OK
