@@ -24,7 +24,7 @@ void error_at(char *loc, char *fmt, ...)
 // それ以外の場合には偽を返す
 bool consume(char *op)
 {
-  if (token->kind != TK_RESERVED || token->len != strlen(op) || memcmp(token->str, op, token->len))
+  if ((token->kind != TK_RETURN && token->kind != TK_RESERVED) || token->len != strlen(op) || memcmp(token->str, op, token->len))
     return false;
   token = token->next;
   return true;
@@ -201,7 +201,17 @@ void *program()
 
 Node *stmt()
 {
-  Node *node = expr();
+  Node *node;
+  if (consume("return"))
+  {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
+  }
+  else
+  {
+    node = expr();
+  }
   expect(";");
   return node;
 }
