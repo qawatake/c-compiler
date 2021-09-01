@@ -39,7 +39,7 @@ Token *consume_ident()
   if (token->kind == TK_IDENT)
   {
     Token *tok = token;
-    token=token->next;
+    token = token->next;
     return tok;
   }
   return NULL;
@@ -255,16 +255,20 @@ Node *stmt()
       node_else->lhs = node_true;
       node_else->rhs = stmt();
       node->rhs = node_else;
-    } else
+    }
+    else
     {
       node->rhs = node_true;
     }
-    // expect("(");
-    // node = calloc(1, sizeof(Node));
-    // node->kind = ND_IF;
-    // node->lhs = expr();
-    // expect(")");
-    // node->rhs = stmt();
+  }
+  else if (consume("while"))
+  {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_WHILE;
+    expect("(");
+    node->lhs = expr();
+    expect(")");
+    node->rhs = stmt();
   }
   else
   {
