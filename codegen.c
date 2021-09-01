@@ -20,8 +20,25 @@ void gen_func(Node *node)
     error("関数ではありません");
   }
 
+  char *reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+  int narg = 0;
+  Node *arg = node->lhs;
+  if (arg != NULL)
+  {
+    gen(arg);
+    while (arg != NULL)
+    {
+      narg++;
+      arg = arg->lhs;
+    }
+    for (int i = 1; i <= narg; i++)
+    {
+      printf("  pop %s\n", reg[narg - i]);
+    }
+  }
+
   printf("  call ");
-  for (int i= 0; i < node->len; i++)
+  for (int i = 0; i < node->len; i++)
   {
     printf("%c", node->name[i]);
   }
@@ -39,6 +56,13 @@ void gen(Node *node)
     printf("  pop rax\n");
     gen(node->rhs);
     printf("  pop rax\n");
+    return;
+  case ND_EXPR_STMT:
+    gen(node->rhs);
+    if (node->lhs != NULL)
+    {
+      gen(node->lhs);
+    }
     return;
   case ND_NUM:
     printf("  push %d\n", node->val);

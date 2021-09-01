@@ -130,7 +130,7 @@ Token *tokenize(char *p)
     }
 
     // Single-letter punctuator
-    if (strchr("+-*/()<>=;{}", *p))
+    if (strchr("+-*/()<>=;{},", *p))
     {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
@@ -458,6 +458,25 @@ Node *unary()
   return primary();
 }
 
+Node *parse_func_args()
+{
+  Node *node;
+  Node *node_l;
+  if (consume(")"))
+  {
+    return NULL;
+  }
+  node = new_node(ND_EXPR_STMT, NULL, expr());
+  node_l = node;
+  while (!consume(")"))
+  {
+    expect(",");
+    node_l->lhs = new_node(ND_EXPR_STMT, NULL, expr());
+    node_l = node_l->lhs;
+  }
+  return node;
+}
+
 Node *primary()
 {
   // 次のトークンが "(" なら, "(" expr ")" のはず
@@ -474,8 +493,8 @@ Node *primary()
     Node *node = calloc(1, sizeof(Node));
     if (consume("("))
     {
-      expect(")");
       node->kind = ND_FUNC;
+      node->lhs = parse_func_args();
       LVar *lvar = find_lvar(tok);
       if (lvar)
       {

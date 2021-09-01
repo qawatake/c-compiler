@@ -92,6 +92,7 @@ typedef enum
   ND_ASSIGN,    // =
   ND_NONE,      // None
   ND_COMP_STMT, // Compound Statement
+  ND_EXPR_STMT, // Expression Statement
   ND_RETURN,    // return
   ND_IF,        // if
   ND_ELSE,      // else
@@ -128,6 +129,7 @@ Node *relational();
 Node *add();
 Node *mul();
 Node *unary();
+Node *parse_func_args();
 Node *primary();
 
 void gen_lval(Node *node);
