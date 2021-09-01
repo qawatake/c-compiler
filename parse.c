@@ -130,7 +130,7 @@ Token *tokenize(char *p)
     }
 
     // Single-letter punctuator
-    if (strchr("+-*/()<>=;", *p))
+    if (strchr("+-*/()<>=;{}", *p))
     {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
@@ -270,7 +270,19 @@ void *program()
 Node *stmt()
 {
   Node *node;
-  if (consume("return"))
+  if (consume("{"))
+  {
+    node = new_node(ND_COMP_STMT, NULL, NULL);
+    Node *node_r = node;
+    while (!consume("}"))
+    {
+      node_r->lhs = stmt();
+      node_r->rhs = new_node(ND_COMP_STMT, NULL, NULL);
+      node_r = node_r->rhs;
+    }
+    node_r->kind = ND_NONE;
+  }
+  else if (consume("return"))
   {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;

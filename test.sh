@@ -45,5 +45,7 @@ assert 3 'i = 0; while (i < 3) i = i + 1; return i;'
 assert 16 'i=1; while (i<10) i = i * 2; return i;'
 assert 3 'for (i=0; i<=2; i = i+1) i; return i;'
 assert 3 'acc = 0; for (i=0; i <= 2; i = i + 1) acc = acc + i; return acc;'
+assert 3 'acc = 0; i = 0; while (i <= 2) {acc = acc + i; i = i + 1;} return acc;'
+
 
 echo OK

@@ -115,6 +115,7 @@ struct Node
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
+Node *parse_for_contents();
 void *program();
 Node *stmt();
 Node *expr();

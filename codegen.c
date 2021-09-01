@@ -21,7 +21,9 @@ void gen(Node *node)
     return;
   case ND_COMP_STMT:
     gen(node->lhs);
+    printf("  pop rax\n");
     gen(node->rhs);
+    printf("  pop rax\n");
     return;
   case ND_NUM:
     printf("  push %d\n", node->val);
