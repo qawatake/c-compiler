@@ -17,6 +17,12 @@ void gen(Node *node)
 {
   switch (node->kind)
   {
+  case ND_NONE:
+    return;
+  case ND_COMP_STMT:
+    gen(node->lhs);
+    gen(node->rhs);
+    return;
   case ND_NUM:
     printf("  push %d\n", node->val);
     return;
@@ -69,6 +75,10 @@ void gen(Node *node)
     printf("  jmp .Lbegin%x\n", lnum);
     printf(".Lend%x:\n", lnum);
     return;
+  case ND_FOR:
+    gen(node->lhs);      // 初期化
+    gen(node->rhs->rhs); // ブロック内処理 & 更新
+    gen(node->rhs);      // while 文
   case ND_RETURN:
     gen(node->lhs);
     printf("  pop rax\n");

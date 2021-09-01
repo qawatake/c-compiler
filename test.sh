@@ -43,5 +43,7 @@ assert 1 'if (0!=0) return 0; else return 1;'
 assert 8 'a = 5; if (a / 2 == 1) a = a * 2; else a = a + 3; return a;'
 assert 3 'i = 0; while (i < 3) i = i + 1; return i;'
 assert 16 'i=1; while (i<10) i = i * 2; return i;'
+assert 3 'for (i=0; i<=2; i = i+1) i; return i;'
+assert 3 'acc = 0; for (i=0; i <= 2; i = i + 1) acc = acc + i; return acc;'
 
 echo OK

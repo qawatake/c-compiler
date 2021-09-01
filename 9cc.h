@@ -81,22 +81,24 @@ Token *tokenize(char *p);
 // 抽象構文木のノードの種類
 typedef enum
 {
-  ND_ADD,    // +
-  ND_SUB,    // -
-  ND_MUL,    // *
-  ND_DIV,    // /
-  ND_EQ,     // ==
-  ND_NE,     // !=
-  ND_L,      // <
-  ND_LE,     // <=
-  ND_ASSIGN, // =
-  ND_RETURN, // return
-  ND_IF,     // if
-  ND_ELSE,   // else
-  ND_WHILE,  // while
-  ND_FOR,    //for
-  ND_LVAR,   // ローカル変数
-  ND_NUM,    // 整数
+  ND_ADD,       // +
+  ND_SUB,       // -
+  ND_MUL,       // *
+  ND_DIV,       // /
+  ND_EQ,        // ==
+  ND_NE,        // !=
+  ND_L,         // <
+  ND_LE,        // <=
+  ND_ASSIGN,    // =
+  ND_NONE,      // None
+  ND_COMP_STMT, // Compound Statement
+  ND_RETURN,    // return
+  ND_IF,        // if
+  ND_ELSE,      // else
+  ND_WHILE,     // while
+  ND_FOR,       // for
+  ND_LVAR,      // ローカル変数
+  ND_NUM,       // 整数
 } NodeKind;
 
 typedef struct Node Node; // Node_tag Node

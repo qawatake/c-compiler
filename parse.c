@@ -217,6 +217,44 @@ Node *new_node_num(int val)
   return node;
 }
 
+Node *parse_for_contents()
+{
+  Node *node = calloc(1, sizeof(Node));
+  expect("(");
+  if (consume(";"))
+  {
+    node->lhs = new_node(ND_NONE, NULL, NULL);
+  }
+  else
+  {
+    node->lhs = expr();
+    expect(";");
+  }
+
+  if (consume(";"))
+  {
+    node->rhs = new_node(ND_WHILE, new_node_num(1), NULL);
+  }
+  else
+  {
+    node->rhs = new_node(ND_WHILE, expr(), NULL);
+    expect(";");
+  }
+
+  if (consume(")"))
+  {
+    node->rhs->rhs = new_node(ND_COMP_STMT, NULL, NULL);
+  }
+  else
+  {
+    node->rhs->rhs = new_node(ND_COMP_STMT, NULL, expr());
+    expect(")");
+  }
+
+  node->rhs->rhs->lhs = stmt();
+  return node;
+}
+
 void *program()
 {
   locals = calloc(1, sizeof(LVar));
@@ -269,6 +307,10 @@ Node *stmt()
     node->lhs = expr();
     expect(")");
     node->rhs = stmt();
+  }
+  else if (consume("for"))
+  {
+    node = parse_for_contents();
   }
   else
   {
