@@ -13,6 +13,21 @@ void gen_lval(Node *node)
   printf("  push rax\n");
 }
 
+void gen_func(Node *node)
+{
+  if (node->kind != ND_FUNC)
+  {
+    error("関数ではありません");
+  }
+
+  printf("  call ");
+  for (int i= 0; i < node->len; i++)
+  {
+    printf("%c", node->name[i]);
+  }
+  printf("\n");
+}
+
 void gen(Node *node)
 {
   switch (node->kind)
@@ -33,6 +48,9 @@ void gen(Node *node)
     printf("  pop rax\n");
     printf("  mov rax, [rax]\n");
     printf("  push rax\n");
+    return;
+  case ND_FUNC:
+    gen_func(node);
     return;
   case ND_ASSIGN:
     gen_lval(node->lhs);

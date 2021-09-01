@@ -472,6 +472,29 @@ Node *primary()
   if (tok)
   {
     Node *node = calloc(1, sizeof(Node));
+    if (consume("("))
+    {
+      expect(")");
+      node->kind = ND_FUNC;
+      LVar *lvar = find_lvar(tok);
+      if (lvar)
+      {
+        node->name = lvar->name;
+        node->len = lvar->len;
+      }
+      else
+      {
+        lvar = calloc(1, sizeof(LVar));
+        lvar->name = tok->str;
+        lvar->len = tok->len;
+        lvar->next = locals;
+        locals = lvar;
+        node->name = lvar->name;
+        node->len = lvar->len;
+      }
+      return node;
+    }
+
     node->kind = ND_LVAR;
     LVar *lvar = find_lvar(tok);
     if (lvar)
