@@ -132,6 +132,12 @@ Node *unary();
 Node *parse_func_args();
 Node *primary();
 
+// call 呼び出し前のアラインメント
+// r10, r11, r12 レジスタが書き換えられる
+void align();
+// call 呼び出し後のアラインメント
+void dealign();
+
 void gen_lval(Node *node);
 void gen(Node *node);
 

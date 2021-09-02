@@ -13,6 +13,28 @@ void gen_lval(Node *node)
   printf("  push rax\n");
 }
 
+void align()
+{
+  printf("  mov r10, rax\n"); // rax を r10 に退避
+  printf("  mov r11, rdx\n"); // rds を r11 に退避
+
+  // rsp を 16 で割った余りを r12 に格納
+  printf("  mov rax, rsp\n");
+  printf("  cqo\n");
+  printf("  mov r12, 16\n");
+  printf("  idiv r12\n");
+
+  printf("  sub rsp, rdx\n");
+  printf("  mov r12, rdx\n"); // シフトする数を r12 にロード (r12 は関数呼び出しの前後に変化しないように規約で決まっている)
+  printf("  mov rdx, r11\n"); // rdx を復元
+  printf("  mov rax, r10\n"); // rax を復元
+}
+
+void dealign()
+{
+  printf("  add rsp, r12\n"); // シフトした分を戻す
+}
+
 void gen_func(Node *node)
 {
   if (node->kind != ND_FUNC)
@@ -37,12 +59,14 @@ void gen_func(Node *node)
     }
   }
 
+  align();
   printf("  call ");
   for (int i = 0; i < node->len; i++)
   {
     printf("%c", node->name[i]);
   }
   printf("\n");
+  dealign();
   printf("  push rax\n");
 }
 void gen(Node *node)
