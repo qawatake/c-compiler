@@ -50,14 +50,14 @@ void gen(Node *node)
   switch (node->kind)
   {
   case ND_NONE:
+    printf("  push 0\n");
     return;
   case ND_COMP_STMT:
     gen(node->lhs);
     printf("  pop rax\n");
     gen(node->rhs);
-    printf("  pop rax\n");
     return;
-  case ND_EXPR_STMT:
+  case ND_EXPR_STMT: // つながった expr の数だけスタックに積み上がる
     gen(node->rhs);
     if (node->lhs != NULL)
     {
@@ -106,6 +106,7 @@ void gen(Node *node)
       printf("  je .Lend%x\n", lnum);
       gen(node->rhs);
       printf(".Lend%x:\n", lnum);
+      printf("  push 0;"); // スタックに1つ残すため
       lnum++;
     }
     return;
@@ -118,10 +119,11 @@ void gen(Node *node)
     gen(node->rhs);
     printf("  jmp .Lbegin%x\n", lnum);
     printf(".Lend%x:\n", lnum);
+    printf("  push 0;"); // スタックに1つ残すため
     return;
   case ND_FOR:
     gen(node->lhs);      // 初期化
-    gen(node->rhs->rhs); // ブロック内処理 & 更新
+    printf("  pop rax\n");
     gen(node->rhs);      // while 文
   case ND_RETURN:
     gen(node->lhs);

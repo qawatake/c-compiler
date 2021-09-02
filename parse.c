@@ -273,14 +273,14 @@ Node *stmt()
   if (consume("{"))
   {
     node = new_node(ND_COMP_STMT, NULL, NULL);
-    Node *node_r = node;
+    Node *cur = node;
     while (!consume("}"))
     {
-      node_r->lhs = stmt();
-      node_r->rhs = new_node(ND_COMP_STMT, NULL, NULL);
-      node_r = node_r->rhs;
+      cur->lhs = stmt();
+      cur->rhs = new_node(ND_COMP_STMT, NULL, NULL);
+      cur = cur->rhs;
     }
-    node_r->kind = ND_NONE;
+    cur->kind = ND_NONE;
   }
   else if (consume("return"))
   {
@@ -461,18 +461,18 @@ Node *unary()
 Node *parse_func_args()
 {
   Node *node;
-  Node *node_l;
+  Node *cur;
   if (consume(")"))
   {
     return NULL;
   }
   node = new_node(ND_EXPR_STMT, NULL, expr());
-  node_l = node;
+  cur = node;
   while (!consume(")"))
   {
     expect(",");
-    node_l->lhs = new_node(ND_EXPR_STMT, NULL, expr());
-    node_l = node_l->lhs;
+    cur->lhs = new_node(ND_EXPR_STMT, NULL, expr());
+    cur = cur->lhs;
   }
   return node;
 }
