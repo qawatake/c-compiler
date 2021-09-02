@@ -35,7 +35,7 @@ void dealign()
   printf("  add rsp, r12\n"); // シフトした分を戻す
 }
 
-void gen_func(Node *node)
+void gen_call(Node *node)
 {
   if (node->kind != ND_CALL)
   {
@@ -69,25 +69,41 @@ void gen_func(Node *node)
   dealign();
   printf("  push rax\n");
 }
+
+void gen_func(Node *node)
+{
+  printf(".globl ");
+  for (int i=0; i<node->len; i++)
+  {
+    printf("%c", node->name[i]);
+  }
+  printf("\n");
+  for (int i=0; i< node->len; i++)
+  {
+    printf("%c", node->name[i]);
+  }
+  printf(":\n");
+
+  // プロローグ
+  printf("  push rbp\n");
+  printf("  mov rbp, rsp\n");
+  printf("  sub rsp, 208\n");
+
+  gen(node->lhs);
+  printf("  pop rax\n");
+
+  // エピローグ
+  printf("  mov rsp, rbp\n");
+  printf("  pop rbp\n");
+  printf("  ret\n");
+}
+
 void gen(Node *node)
 {
   switch (node->kind)
   {
   case ND_FUNC:
-    printf("main:\n");
-
-    // プロローグ
-    printf("  push rbp\n");
-    printf("  mov rbp, rsp\n");
-    printf("  sub rsp, 208\n");
-
-    gen(node->lhs);
-    printf("  pop rax\n");
-
-    // エピローグ
-    printf("  mov rsp, rbp\n");
-    printf("  pop rbp\n");
-    printf("  ret\n");
+    gen_func(node);
   case ND_NONE:
     printf("  push rax\n");
     return;
@@ -113,7 +129,7 @@ void gen(Node *node)
     printf("  push rax\n");
     return;
   case ND_CALL:
-    gen_func(node);
+    gen_call(node);
     return;
   case ND_ASSIGN:
     gen_lval(node->lhs);
@@ -161,9 +177,9 @@ void gen(Node *node)
     printf("  push 0;"); // スタックに1つ残すため
     return;
   case ND_FOR:
-    gen(node->lhs);      // 初期化
+    gen(node->lhs); // 初期化
     printf("  pop rax\n");
-    gen(node->rhs);      // while 文
+    gen(node->rhs); // while 文
   case ND_RETURN:
     gen(node->lhs);
     printf("  pop rax\n");

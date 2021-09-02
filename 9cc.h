@@ -114,8 +114,8 @@ struct Node
   Node *rhs;     // 右辺
   int val;       // kind が ND_NUM の場合のみ使う
   int offset;    // kind が ND_LVAR の場合のみ使う
-  char *name;    // kind が ND_FUNC の場合のみ使う
-  int len;       // kind が ND_FUNC の場合のみ使う
+  char *name;    // kind が ND_CALL の場合のみ使う
+  int len;       // kind が ND_CALL の場合のみ使う
 };
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
@@ -141,6 +141,8 @@ void align();
 void dealign();
 
 void gen_lval(Node *node);
+void gen_call(Node *node);
+void gen_func(Node *node);
 void gen(Node *node);
 
 // 現在注目しているトークン

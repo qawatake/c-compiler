@@ -4,7 +4,7 @@ assert() {
   input="$2"
 
   ./9cc "$input" > tmp.s
-  cc -o tmp tmp.s
+  cc -o tmp tmp.s tmp-plus.o
   ./tmp
   actual="$?"
 
@@ -15,6 +15,8 @@ assert() {
     exit 1
   fi
 }
+
+echo 'int plus(int x, int y) { return x + y; }' | cc -xc -c -o tmp-plus.o -
 
 assert 0 "main(){0;}"
 assert 42 "main(){42;}"
@@ -46,6 +48,7 @@ assert 16 'main(){i=1; while (i<10) i = i * 2; return i;}'
 assert 3 'main(){for (i=0; i<=2; i = i+1) i; return i;}'
 assert 3 'main(){acc = 0; for (i=0; i <= 2; i = i + 1) acc = acc + i; return acc;}'
 assert 3 'main(){acc = 0; i = 0; while (i <= 2) {acc = acc + i; i = i + 1;} return acc;}'
+assert 5 'main() { return plus(2, 3); }'
 
 
 echo OK

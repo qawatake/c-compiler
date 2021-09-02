@@ -263,7 +263,6 @@ void *program()
   while (!at_eof())
   {
     code[i++] = function();
-    // code[i++] = stmt();
   }
   code[i] = NULL;
 }
@@ -278,6 +277,8 @@ Node *function()
   {
     error("関数名ではありません");
   }
+  node->name = tok->str;
+  node->len = tok->len;
 
   expect("(");
   expect(")");
