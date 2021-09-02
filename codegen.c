@@ -43,8 +43,8 @@ void gen_func(Node *node)
     printf("%c", node->name[i]);
   }
   printf("\n");
+  printf("  push rax\n");
 }
-
 void gen(Node *node)
 {
   switch (node->kind)
