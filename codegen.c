@@ -37,7 +37,7 @@ void dealign()
 
 void gen_func(Node *node)
 {
-  if (node->kind != ND_FUNC)
+  if (node->kind != ND_CALL)
   {
     error("関数ではありません");
   }
@@ -73,8 +73,23 @@ void gen(Node *node)
 {
   switch (node->kind)
   {
+  case ND_FUNC:
+    printf("main:\n");
+
+    // プロローグ
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+    printf("  sub rsp, 208\n");
+
+    gen(node->lhs);
+    printf("  pop rax\n");
+
+    // エピローグ
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
+    printf("  ret\n");
   case ND_NONE:
-    printf("  push 0\n");
+    printf("  push rax\n");
     return;
   case ND_COMP_STMT:
     gen(node->lhs);
@@ -97,7 +112,7 @@ void gen(Node *node)
     printf("  mov rax, [rax]\n");
     printf("  push rax\n");
     return;
-  case ND_FUNC:
+  case ND_CALL:
     gen_func(node);
     return;
   case ND_ASSIGN:

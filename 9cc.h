@@ -93,12 +93,13 @@ typedef enum
   ND_NONE,      // None
   ND_COMP_STMT, // Compound Statement
   ND_EXPR_STMT, // Expression Statement
+  ND_CALL,      // 関数呼び出し
   ND_RETURN,    // return
   ND_IF,        // if
   ND_ELSE,      // else
   ND_WHILE,     // while
   ND_FOR,       // for
-  ND_FUNC,      // 関数
+  ND_FUNC,      // 関数定義
   ND_LVAR,      // ローカル変数
   ND_NUM,       // 整数
 } NodeKind;
@@ -121,6 +122,7 @@ Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 Node *parse_for_contents();
 void *program();
+Node *function();
 Node *stmt();
 Node *expr();
 Node *assign();

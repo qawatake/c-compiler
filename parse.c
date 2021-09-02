@@ -262,9 +262,41 @@ void *program()
   int i = 0;
   while (!at_eof())
   {
-    code[i++] = stmt();
+    code[i++] = function();
+    // code[i++] = stmt();
   }
   code[i] = NULL;
+}
+
+Node *function()
+{
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_FUNC;
+
+  Token *tok = consume_ident();
+  if (!tok)
+  {
+    error("関数名ではありません");
+  }
+
+  expect("(");
+  expect(")");
+  expect("{");
+
+  if (consume("}"))
+  {
+    node->lhs = new_node(ND_NONE, NULL, NULL);
+    return node;
+  }
+  node->lhs = new_node(ND_COMP_STMT, stmt(), NULL);
+  Node *cur = node->lhs;
+  while (!consume("}"))
+  {
+    cur->rhs = new_node(ND_COMP_STMT, stmt(), NULL);
+    cur = cur->rhs;
+  }
+  cur->rhs = new_node(ND_NONE, NULL, NULL);
+  return node;
 }
 
 Node *stmt()
@@ -493,7 +525,7 @@ Node *primary()
     Node *node = calloc(1, sizeof(Node));
     if (consume("("))
     {
-      node->kind = ND_FUNC;
+      node->kind = ND_CALL;
       node->lhs = parse_func_args();
       LVar *lvar = find_lvar(tok);
       if (lvar)
