@@ -49,6 +49,8 @@ assert 3 'main(){for (i=0; i<=2; i = i+1) i; return i;}'
 assert 3 'main(){acc = 0; for (i=0; i <= 2; i = i + 1) acc = acc + i; return acc;}'
 assert 3 'main(){acc = 0; i = 0; while (i <= 2) {acc = acc + i; i = i + 1;} return acc;}'
 assert 5 'main() { return plus(2, 3); }'
+assert 1 'one() { return 1; } main() { return one(); }'
+assert 3 'one() { return 1; } two() { return 2; } main() { return one()+two(); }'
 
 
 echo OK

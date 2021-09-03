@@ -73,18 +73,23 @@ void gen_call(Node *node)
 void gen_func(Node *node)
 {
   printf(".globl ");
-  for (int i=0; i<node->len; i++)
+  for (int i = 0; i < node->len; i++)
   {
     printf("%c", node->name[i]);
   }
   printf("\n");
-  for (int i=0; i< node->len; i++)
+  for (int i = 0; i < node->len; i++)
   {
     printf("%c", node->name[i]);
   }
   printf(":\n");
 
   // プロローグ
+  printf("  push r12\n");
+  printf("  push r13\n");
+  printf("  push r14\n");
+  printf("  push r15\n");
+  printf("  push rbx\n");
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
   printf("  sub rsp, 208\n");
@@ -95,6 +100,11 @@ void gen_func(Node *node)
   // エピローグ
   printf("  mov rsp, rbp\n");
   printf("  pop rbp\n");
+  printf("  pop rbx\n");
+  printf("  pop r15\n");
+  printf("  pop r14\n");
+  printf("  pop r13\n");
+  printf("  pop r12\n");
   printf("  ret\n");
 }
 
@@ -185,6 +195,11 @@ void gen(Node *node)
     printf("  pop rax\n");
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
+    printf("  pop rbx\n");
+    printf("  pop r15\n");
+    printf("  pop r14\n");
+    printf("  pop r13\n");
+    printf("  pop r12\n");
     printf("  ret\n");
     return;
   }
