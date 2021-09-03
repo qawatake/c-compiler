@@ -95,7 +95,7 @@ bool is_alnum(char c)
 // 見つからなかった場合はNULLを返す
 LVar *find_lvar(Token *tok)
 {
-  for (LVar *var = locals; var; var = var->next)
+  for (LVar *var = scope->locals; var; var = var->next)
   {
     if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
     {
@@ -255,11 +255,32 @@ Node *parse_for_contents()
   return node;
 }
 
+void zoom_in()
+{
+  Scope *child = calloc(1, sizeof(Scope));
+  child->parent = scope;
+  child->locals = NULL;
+  scope = child;
+}
+
+void zoom_out()
+{
+  Scope *cur = scope;
+  while (cur->locals != NULL)
+  {
+    LVar *next = cur->locals->next;
+    free(cur->locals);
+    cur->locals = next;
+  }
+  scope = scope->parent;
+  free(cur);
+}
+
 void *program()
 {
-  locals = calloc(1, sizeof(LVar));
-  locals->next = NULL;
-  locals->offset = 0;
+  scope = calloc(1, sizeof(Scope));
+  scope->parent = NULL;
+  scope->locals = NULL;
   int i = 0;
   while (!at_eof())
   {
@@ -276,10 +297,8 @@ Function *function()
     error("関数名ではありません");
   }
   Function *fn = calloc(1, sizeof(Function));
+  zoom_in();
   fn->name = duplicate(tok->str, tok->len);
-  fn->locals = calloc(1, sizeof(LVar));
-  fn->locals->next = NULL;
-  fn->locals->offset = 0;
 
   expect("(");
   if (!consume(")"))
@@ -288,13 +307,13 @@ Function *function()
     {
       Token *tok = consume_ident();
       LVar *lvar = calloc(1, sizeof(lvar));
-      lvar->next = locals;
+      lvar->next = scope->locals;
       lvar->name = tok->str;
       lvar->len = tok->len;
-      lvar->offset = locals->offset + 8;
-      locals = lvar;
-      fn->locals = lvar;
-      if (consume(",")) continue;
+      lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
+      scope->locals = lvar;
+      if (consume(","))
+        continue;
       expect(")");
       break;
     }
@@ -304,6 +323,7 @@ Function *function()
   if (consume("}"))
   {
     fn->body = new_node(ND_NONE, NULL, NULL);
+    zoom_out();
     return fn;
   }
   fn->body = new_node(ND_COMP_STMT, stmt(), NULL);
@@ -315,6 +335,7 @@ Function *function()
     cur = cur->rhs;
   }
   cur->rhs = new_node(ND_NONE, NULL, NULL);
+  zoom_out();
   return fn;
 }
 
@@ -557,8 +578,8 @@ Node *primary()
         lvar = calloc(1, sizeof(LVar));
         lvar->name = tok->str;
         lvar->len = tok->len;
-        lvar->next = locals;
-        locals = lvar;
+        lvar->next = scope->locals;
+        scope->locals = lvar;
         node->name = lvar->name;
         node->len = lvar->len;
       }
@@ -574,12 +595,12 @@ Node *primary()
     else
     {
       lvar = calloc(1, sizeof(LVar));
-      lvar->next = locals;
+      lvar->next = scope->locals;
       lvar->name = tok->str;
       lvar->len = tok->len;
-      lvar->offset = locals->offset + 8;
+      lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
       node->offset = lvar->offset;
-      locals = lvar;
+      scope->locals = lvar;
     }
     return node;
   }

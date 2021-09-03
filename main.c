@@ -19,6 +19,9 @@ int lnum = 0;
 // 複数の関数
 Function *fns[100];
 
+// スコープ
+Scope *scope;
+
 // エラーを報告するための関数
 // printfと同じ引数を取る
 void error(char *fmt, ...) {

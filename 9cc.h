@@ -124,7 +124,6 @@ typedef struct Function Function;
 struct Function
 {
   char *name;
-  LVar *locals;
   Node *body;
 };
 
@@ -155,6 +154,18 @@ void gen_call(Node *node);
 void gen_func(Function *fn);
 void gen(Node *node);
 
+typedef struct Scope Scope;
+struct Scope
+{
+  Scope *parent;
+  LVar *locals;
+};
+
+// 1つ下のスコープに入る
+void zoom_in();
+// 現在のスコープを抜ける
+void zoom_out();
+
 // 現在注目しているトークン
 extern Token *token;
 
@@ -169,5 +180,8 @@ extern int lnum;
 
 // 複数の関数
 extern Function *fns[100];
+
+// スコープ
+extern Scope *scope;
 
 #endif

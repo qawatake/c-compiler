@@ -86,15 +86,11 @@ void gen_func(Function *fn)
   printf("  sub rsp, 208\n");
 
   char *reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-  int i = 0;
-  LVar *lvar = fn->locals;
-  while (lvar->next)
+  for (int i = 0; i < 6; i++)
   {
     printf("  mov rax, rbp\n");
-    printf("  sub rax, %d\n", lvar->offset);
+    printf("  sub rax, %d\n", 8 * (i + 1));
     printf("  mov [rax], %s\n", reg[i]);
-    lvar = lvar->next;
-    i++;
   }
 
   gen(fn->body);

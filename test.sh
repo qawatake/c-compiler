@@ -53,6 +53,7 @@ assert 1 'one() { return 1; } main() { return one(); }'
 assert 3 'one() { return 1; } two() { return 2; } main() { return one()+two(); }'
 assert 6 'mul(a, b) { return a * b; } main() { return mul(2, 3); }'
 assert 21 'add(a,b,c,d,e,f) { return a+b+c+d+e+f; } main() { return add(1,2,3,4,5,6); }'
+assert 6 'mul(a, b) {return a * b;} main(){a = 2; b = 3; return mul(a, b);}'
 
 
 echo OK
