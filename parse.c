@@ -259,45 +259,63 @@ void *program()
 {
   locals = calloc(1, sizeof(LVar));
   locals->next = NULL;
+  locals->offset = 0;
   int i = 0;
   while (!at_eof())
   {
-    code[i++] = function();
+    fns[i++] = function();
   }
-  code[i] = NULL;
+  fns[i] = NULL;
 }
 
-Node *function()
+Function *function()
 {
-  Node *node = calloc(1, sizeof(Node));
-  node->kind = ND_FUNC;
-
   Token *tok = consume_ident();
   if (!tok)
   {
     error("関数名ではありません");
   }
-  node->name = tok->str;
-  node->len = tok->len;
+  Function *fn = calloc(1, sizeof(Function));
+  fn->name = duplicate(tok->str, tok->len);
+  fn->locals = calloc(1, sizeof(LVar));
+  fn->locals->next = NULL;
+  fn->locals->offset = 0;
 
   expect("(");
-  expect(")");
+  if (!consume(")"))
+  {
+    for (;;)
+    {
+      Token *tok = consume_ident();
+      LVar *lvar = calloc(1, sizeof(lvar));
+      lvar->next = locals;
+      lvar->name = tok->str;
+      lvar->len = tok->len;
+      lvar->offset = locals->offset + 8;
+      locals = lvar;
+      fn->locals = lvar;
+      if (consume(",")) continue;
+      expect(")");
+      break;
+    }
+  }
   expect("{");
 
   if (consume("}"))
   {
-    node->lhs = new_node(ND_NONE, NULL, NULL);
-    return node;
+    fn->body = new_node(ND_NONE, NULL, NULL);
+    return fn;
   }
-  node->lhs = new_node(ND_COMP_STMT, stmt(), NULL);
-  Node *cur = node->lhs;
+  fn->body = new_node(ND_COMP_STMT, stmt(), NULL);
+
+  Node *cur = fn->body;
   while (!consume("}"))
   {
     cur->rhs = new_node(ND_COMP_STMT, stmt(), NULL);
     cur = cur->rhs;
   }
   cur->rhs = new_node(ND_NONE, NULL, NULL);
-  return node;
+  return fn;
 }
 
 Node *stmt()

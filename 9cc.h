@@ -44,6 +44,8 @@ void error(char *fmt, ...);
 // エラー箇所をを報告する
 void error_at(char *loc, char *fmt, ...);
 
+char* duplicate(char *str, size_t len);
+
 // 次のトークンが期待している記号のときには, トークンを1つ進めて真を返す
 // それ以外の場合には偽を返す
 bool consume(char *op);
@@ -118,11 +120,19 @@ struct Node
   int len;       // kind が ND_CALL の場合のみ使う
 };
 
+typedef struct Function Function;
+struct Function
+{
+  char *name;
+  LVar *locals;
+  Node *body;
+};
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 Node *parse_for_contents();
 void *program();
-Node *function();
+Function *function();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -142,7 +152,7 @@ void dealign();
 
 void gen_lval(Node *node);
 void gen_call(Node *node);
-void gen_func(Node *node);
+void gen_func(Function *fn);
 void gen(Node *node);
 
 // 現在注目しているトークン
@@ -154,10 +164,10 @@ extern LVar *locals;
 // 入力プログラム
 extern char *user_input;
 
-// 複数の式
-extern Node *code[100];
-
 // ループの数
 extern int lnum;
+
+// 複数の関数
+extern Function *fns[100];
 
 #endif

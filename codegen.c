@@ -70,19 +70,10 @@ void gen_call(Node *node)
   printf("  push rax\n");
 }
 
-void gen_func(Node *node)
+void gen_func(Function *fn)
 {
-  printf(".globl ");
-  for (int i = 0; i < node->len; i++)
-  {
-    printf("%c", node->name[i]);
-  }
-  printf("\n");
-  for (int i = 0; i < node->len; i++)
-  {
-    printf("%c", node->name[i]);
-  }
-  printf(":\n");
+  printf(".globl %s\n", fn->name);
+  printf("%s:\n", fn->name);
 
   // プロローグ
   printf("  push r12\n");
@@ -94,7 +85,19 @@ void gen_func(Node *node)
   printf("  mov rbp, rsp\n");
   printf("  sub rsp, 208\n");
 
-  gen(node->lhs);
+  char *reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+  int i = 0;
+  LVar *lvar = fn->locals;
+  while (lvar->next)
+  {
+    printf("  mov rax, rbp\n");
+    printf("  sub rax, %d\n", lvar->offset);
+    printf("  mov [rax], %s\n", reg[i]);
+    lvar = lvar->next;
+    i++;
+  }
+
+  gen(fn->body);
   printf("  pop rax\n");
 
   // エピローグ
@@ -113,7 +116,7 @@ void gen(Node *node)
   switch (node->kind)
   {
   case ND_FUNC:
-    gen_func(node);
+    return;
   case ND_NONE:
     printf("  push rax\n");
     return;

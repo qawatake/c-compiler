@@ -51,6 +51,8 @@ assert 3 'main(){acc = 0; i = 0; while (i <= 2) {acc = acc + i; i = i + 1;} retu
 assert 5 'main() { return plus(2, 3); }'
 assert 1 'one() { return 1; } main() { return one(); }'
 assert 3 'one() { return 1; } two() { return 2; } main() { return one()+two(); }'
+assert 6 'mul(a, b) { return a * b; } main() { return mul(2, 3); }'
+assert 21 'add(a,b,c,d,e,f) { return a+b+c+d+e+f; } main() { return add(1,2,3,4,5,6); }'
 
 
 echo OK
