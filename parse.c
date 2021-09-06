@@ -319,7 +319,7 @@ Function *function()
       if (!consume("int"))
         error("関数の引数の冒頭に型名がありません");
       Token *tok = consume_ident();
-      LVar *lvar = calloc(1, sizeof(lvar));
+      LVar *lvar = calloc(1, sizeof(LVar));
       lvar->next = scope->locals;
       lvar->name = tok->str;
       lvar->len = tok->len;
