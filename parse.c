@@ -283,7 +283,7 @@ void zoom_out()
   free(cur);
 }
 
-void *program()
+void program()
 {
   scope = calloc(1, sizeof(Scope));
   scope->parent = NULL;
@@ -302,6 +302,10 @@ Function *function()
   {
     error("関数宣言の冒頭に型名がありません");
   }
+
+  // 返り値の型をパースする
+  while (consume("*"));
+
   Token *tok = consume_ident();
   if (!tok)
   {
@@ -318,11 +322,24 @@ Function *function()
     {
       if (!consume("int"))
         error("関数の引数の冒頭に型名がありません");
+
+      Type *ty = calloc(1, sizeof(Type));
+      ty->kind = INT;
+      ty->ptr_to = NULL;
+      while (consume("*"))
+      {
+        Type *newty = calloc(1, sizeof(Type));
+        newty->kind = PTR;
+        newty->ptr_to = ty;
+        ty = newty;
+      }
+
       Token *tok = consume_ident();
       LVar *lvar = calloc(1, sizeof(LVar));
       lvar->next = scope->locals;
       lvar->name = tok->str;
       lvar->len = tok->len;
+      lvar->type = ty;
       lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
       scope->locals = lvar;
       if (consume(","))
@@ -378,6 +395,19 @@ Node *stmt()
   {
     node = calloc(1, sizeof(Node));
     node->kind = ND_NONE;
+
+    Type *ty = calloc(1, sizeof(Type));
+    ty->kind = INT;
+    ty->ptr_to = NULL;
+
+    while (consume("*"))
+    {
+      Type *newty = calloc(1, sizeof(Type));
+      newty->kind = PTR;
+      newty->ptr_to = ty;
+      ty = newty;
+    }
+
     Token *tok = consume_ident();
     if (!tok)
     {
@@ -394,6 +424,7 @@ Node *stmt()
     lvar->next = scope->locals;
     lvar->name = tok->str;
     lvar->len = tok->len;
+    lvar->type = ty;
     lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
     scope->locals = lvar;
 

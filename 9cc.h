@@ -28,6 +28,18 @@ struct Token
   int len;        // トークンの長さ 整数, EOFの場合は0
 };
 
+// 変数の型
+typedef struct Type Type;
+struct Type
+{
+  enum
+  {
+    INT,
+    PTR
+  } kind;       // int or pointer
+  Type *ptr_to; // ~ 型へのポインタ
+};
+
 typedef struct LVar LVar;
 // ローカル変数
 struct LVar
@@ -36,6 +48,7 @@ struct LVar
   char *name; // 変数の名前
   int len;    // 変数の長さ
   int offset; // ベースポインタ (RBP) からのオフセット
+  Type *type; // 変数の型
 };
 
 // エラーを報告するための関数
@@ -133,7 +146,7 @@ struct Function
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 Node *parse_for_contents();
-void *program();
+void program();
 Function *function();
 Node *stmt();
 Node *expr();
