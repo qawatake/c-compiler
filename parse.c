@@ -130,7 +130,7 @@ Token *tokenize(char *p)
     }
 
     // Single-letter punctuator
-    if (strchr("+-*/()<>=;{},", *p))
+    if (strchr("+-*/()<>=;{},&", *p))
     {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
@@ -526,6 +526,14 @@ Node *unary()
   if (consume("+"))
   {
     return primary();
+  }
+  if (consume("&"))
+  {
+    return new_node(ND_ADDR, unary(), NULL);
+  }
+  if (consume("*"))
+  {
+    return new_node(ND_DEREF, unary(), NULL);
   }
   return primary();
 }

@@ -44,7 +44,7 @@ void error(char *fmt, ...);
 // エラー箇所をを報告する
 void error_at(char *loc, char *fmt, ...);
 
-char* duplicate(char *str, size_t len);
+char *duplicate(char *str, size_t len);
 
 // 次のトークンが期待している記号のときには, トークンを1つ進めて真を返す
 // それ以外の場合には偽を返す
@@ -101,6 +101,8 @@ typedef enum
   ND_ELSE,      // else
   ND_WHILE,     // while
   ND_FOR,       // for
+  ND_ADDR,      // &x
+  ND_DEREF,     // *x
   ND_FUNC,      // 関数定義
   ND_LVAR,      // ローカル変数
   ND_NUM,       // 整数
