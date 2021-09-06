@@ -24,7 +24,7 @@ void error_at(char *loc, char *fmt, ...)
 // それ以外の場合には偽を返す
 bool consume(char *op)
 {
-  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR)
+  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR && token->kind != TK_INT)
     return false;
   else if (token->len != strlen(op) || memcmp(token->str, op, token->len))
     return false;
@@ -176,6 +176,13 @@ Token *tokenize(char *p)
     if (strncmp(p, "for", 3) == 0 && !is_alnum(p[3]))
     {
       cur = new_token(TK_FOR, cur, p, 3);
+      p += 3;
+      continue;
+    }
+
+    if (strncmp(p, "int", 3) == 0 && !is_alnum(p[3]))
+    {
+      cur = new_token(TK_INT, cur, p, 3);
       p += 3;
       continue;
     }
@@ -359,6 +366,31 @@ Node *stmt()
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
+    expect(";");
+  }
+  else if (consume("int"))
+  {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_NONE;
+    Token *tok = consume_ident();
+    if (!tok)
+    {
+      error("変数名がありません");
+    }
+
+    LVar *lvar = find_lvar(tok);
+    if (lvar)
+    {
+      error("すでに宣言された変数です");
+    }
+
+    lvar = calloc(1, sizeof(LVar));
+    lvar->next = scope->locals;
+    lvar->name = tok->str;
+    lvar->len = tok->len;
+    lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
+    scope->locals = lvar;
+
     expect(";");
   }
   else if (consume("if"))
@@ -575,41 +607,19 @@ Node *primary()
     {
       node->kind = ND_CALL;
       node->lhs = parse_func_args();
-      LVar *lvar = find_lvar(tok);
-      if (lvar)
-      {
-        node->name = lvar->name;
-        node->len = lvar->len;
-      }
-      else
-      {
-        lvar = calloc(1, sizeof(LVar));
-        lvar->name = tok->str;
-        lvar->len = tok->len;
-        lvar->next = scope->locals;
-        scope->locals = lvar;
-        node->name = lvar->name;
-        node->len = lvar->len;
-      }
+      node->name = tok->str;
+      node->len = tok->len;
       return node;
     }
 
     node->kind = ND_LVAR;
     LVar *lvar = find_lvar(tok);
-    if (lvar)
+    if (!lvar)
     {
-      node->offset = lvar->offset;
+      error("宣言されていない変数です");
     }
-    else
-    {
-      lvar = calloc(1, sizeof(LVar));
-      lvar->next = scope->locals;
-      lvar->name = tok->str;
-      lvar->len = tok->len;
-      lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
-      node->offset = lvar->offset;
-      scope->locals = lvar;
-    }
+
+    node->offset = lvar->offset;
     return node;
   }
 
