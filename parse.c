@@ -298,6 +298,10 @@ void *program()
 
 Function *function()
 {
+  if (!consume("int"))
+  {
+    error("関数宣言の冒頭に型名がありません");
+  }
   Token *tok = consume_ident();
   if (!tok)
   {
@@ -312,6 +316,8 @@ Function *function()
   {
     for (;;)
     {
+      if (!consume("int"))
+        error("関数の引数の冒頭に型名がありません");
       Token *tok = consume_ident();
       LVar *lvar = calloc(1, sizeof(lvar));
       lvar->next = scope->locals;
