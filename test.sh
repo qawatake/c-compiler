@@ -56,6 +56,7 @@ assert 21 'int add(int a, int b, int c, int d, int e, int f) { return a+b+c+d+e+
 assert 6 'int mul(int a, int b) {return a * b;} int main(){int a; int b; a = 2; b = 3; return mul(a, b);}'
 assert 3 'int main(){int x; int y; x = 3; y = &x; return *y;}'
 assert 1 'int main(){int x; x = 1; return *&x;}'
+assert 3 'int main(){int x; int y; y = &x; *y = 3; return x;}'
 
 
 echo OK

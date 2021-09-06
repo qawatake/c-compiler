@@ -3,14 +3,19 @@
 
 void gen_lval(Node *node)
 {
-  if (node->kind != ND_LVAR)
+  switch (node->kind)
   {
-    error("代入の左辺値が変数ではありません");
+    case ND_LVAR:
+      printf("  mov rax, rbp\n");
+      printf("  sub rax, %d\n", node->offset);
+      printf("  push rax\n");
+      break;
+    case ND_DEREF:
+      gen(node->lhs);
+      break;
+    default:
+      error("代入の左辺値が変数あるいは*変数ではありません");
   }
-
-  printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->offset);
-  printf("  push rax\n");
 }
 
 void align()
