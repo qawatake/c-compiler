@@ -5,16 +5,16 @@ void gen_lval(Node *node)
 {
   switch (node->kind)
   {
-    case ND_LVAR:
-      printf("  mov rax, rbp\n");
-      printf("  sub rax, %d\n", node->offset);
-      printf("  push rax\n");
-      break;
-    case ND_DEREF:
-      gen(node->lhs);
-      break;
-    default:
-      error("代入の左辺値が変数あるいは*変数ではありません");
+  case ND_LVAR:
+    printf("  mov rax, rbp\n");
+    printf("  sub rax, %d\n", node->offset);
+    printf("  push rax\n");
+    break;
+  case ND_DEREF:
+    gen(node->lhs);
+    break;
+  default:
+    error("代入の左辺値が変数あるいは*変数ではありません");
   }
 }
 
@@ -216,6 +216,55 @@ void gen(Node *node)
     printf("  pop r12\n");
     printf("  ret\n");
     return;
+  case ND_ADD:
+    if (node->type->kind == TY_PTR)
+    {
+      if (node->lhs->type->kind == TY_PTR && node->rhs->type->kind == TY_PTR)
+        error("ポインタとポインタの演算が行われています");
+
+      if (node->lhs->type->kind == TY_PTR)
+      {
+        gen(node->lhs);
+        gen(node->rhs);
+      }
+      if (node->rhs->type->kind == TY_PTR)
+      {
+        gen(node->rhs);
+        gen(node->lhs);
+      }
+      printf("  pop rax\n");
+      printf("  mov rdi, %d\n", size(node->type->ptr_to));
+      printf("  imul rax, rdi\n");
+      printf("  push rax\n");
+    }
+    else
+    {
+      gen(node->lhs);
+      gen(node->rhs);
+    }
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+    printf("  add rax, rdi\n");
+    printf("  push rax\n");
+    return;
+  case ND_SUB:
+    gen(node->lhs);
+    gen(node->rhs);
+    if (node->type->kind == TY_PTR)
+    {
+      if (node->rhs->type->kind == TY_PTR)
+        error("引き算の左辺にポインタが配置されています");
+
+      printf("  pop rax\n");
+      printf("  mov rdi, %d\n", size(node->type->ptr_to));
+      printf("  imul rax, rdi\n");
+      printf("  push rax\n");
+    }
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+    printf("  sub rax, rdi\n");
+    printf("  push rax\n");
+    return;
   }
 
   gen(node->lhs);
@@ -226,12 +275,6 @@ void gen(Node *node)
 
   switch (node->kind)
   {
-  case ND_ADD:
-    printf("  add rax, rdi\n");
-    break;
-  case ND_SUB:
-    printf("  sub rax, rdi\n");
-    break;
   case ND_MUL:
     printf("  imul rax, rdi\n");
     break;

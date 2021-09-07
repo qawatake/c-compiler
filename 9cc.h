@@ -28,6 +28,13 @@ struct Token
   int len;        // トークンの長さ 整数, EOFの場合は0
 };
 
+// 変数のサイズ
+typedef enum
+{
+  SIZE_INT = 4,
+  SIZE_PTR = 8,
+} Size;
+
 // 変数の型
 typedef struct Type Type;
 struct Type
@@ -38,8 +45,10 @@ struct Type
     TY_INT,         // int
     TY_PTR          // ポインタ
   } kind;           // int or pointer
-  Type *ptr_to;     // ~ 型へのポインタ
+  Type *ptr_to; // ~ 型へのポインタ
 };
+
+Size size(Type *ty);
 
 typedef struct LVar LVar;
 // ローカル変数
@@ -151,9 +160,15 @@ struct Function
 Function *find_func(Token *tok);
 
 // ノードの型を比較
-// 一致すれば, その型の Type* を返す
-// 一致しなければ, NULL を返す
-Type *tycmp(Type *lty, Type *rty);
+// lty の方が強い型ならば, -1 を返す
+// 同じ型ならば, 0 を返す
+// rty の方が強い方ならば, 1 を返す
+// 型の強さ: 2つの型を2項演算子で結んだときに, 結果の型になるような型を「強い」とする
+// 型の強さの例: TY_INT_LITERAL < TY_INT < TY_INT
+int tycmp(Type *lty, Type *rty);
+
+// 合成したノードの型を返す
+Type *tyjoin(Type *lty, Type *rty);
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);

@@ -207,31 +207,63 @@ Token *tokenize(char *p)
   return head.next;
 }
 
-Type *tycmp(Type *lty, Type *rty)
+int tycmp(Type *lty, Type *rty)
 {
   if (lty == NULL)
-    return rty;
+    return 1;
   if (rty == NULL)
-    return lty;
+    return -1;
 
   switch (lty->kind)
   {
   case TY_INT:
-    if (rty->kind == TY_INT || rty->kind == TY_INT_LITERAL)
-      return lty;
-    return NULL;
-  case TY_INT_LITERAL:
-    if (rty->kind == TY_INT)
-      return rty;
     if (rty->kind == TY_INT_LITERAL)
-      return lty;
-    return NULL;
+      return -1;
+    if (rty->kind == TY_INT)
+      return 0;
+    if (rty->kind == TY_PTR)
+      return 1;
+    error("両辺の型が不整合です");
+  case TY_INT_LITERAL:
+    if (rty->kind == TY_INT_LITERAL)
+      return 0;
+    if (rty->kind == TY_INT || rty->kind == TY_PTR)
+      return 1;
+    error("両辺の型が不整合です");
   case TY_PTR:
-    if (rty->kind != TY_PTR)
-      return NULL;
-    if (tycmp(lty->ptr_to, rty->ptr_to))
-      return lty;
-    return NULL;
+    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_INT)
+      return -1;
+    if (rty->kind == TY_PTR)
+    {
+      return tycmp(lty->ptr_to, rty->ptr_to);
+    }
+    error("両辺の型が不整合です");
+
+  }
+}
+
+Type *tyjoin(Type *lty, Type *rty)
+{
+  if (tycmp(lty, rty) <= 0)
+  {
+    return lty;
+  }
+  else
+  {
+    return rty;
+  }
+}
+
+Size size(Type *ty)
+{
+  switch (ty->kind)
+  {
+  case TY_INT:
+    return SIZE_INT;
+  case TY_PTR:
+    return SIZE_PTR;
+  default:
+    error("サイズが定義されていません");
   }
 }
 
@@ -531,7 +563,7 @@ Node *assign()
     if (consume("="))
     {
       Node *rhs = assign();
-      Type *ty = tycmp(node->type, rhs->type);
+      Type *ty = tyjoin(node->type, rhs->type);
       node = new_node(ND_ASSIGN, node, rhs);
       node->type = ty;
       continue;
@@ -612,15 +644,16 @@ Node *add()
     if (consume("+"))
     {
       Node *rhs = mul();
-      Type *ty = tycmp(node->type, rhs->type);
+      Type *ty = tyjoin(node->type, rhs->type);
       node = new_node(ND_ADD, node, rhs);
       node->type = ty;
     }
     else if (consume("-"))
     {
       Node *rhs = mul();
-      Type *ty = tycmp(node->type, rhs->type);
+      Type *ty = tyjoin(node->type, rhs->type);
       node = new_node(ND_SUB, node, rhs);
+      node->type = ty;
     }
     else
     {
@@ -638,14 +671,14 @@ Node *mul()
     if (consume("*"))
     {
       Node *rhs = unary();
-      Type *ty = tycmp(node->type, rhs->type);
+      Type *ty = tyjoin(node->type, rhs->type);
       node = new_node(ND_MUL, node, rhs);
       node->type = ty;
     }
     else if (consume("/"))
     {
       Node *rhs = unary();
-      Type *ty = tycmp(node->type, rhs->type);
+      Type *ty = tyjoin(node->type, rhs->type);
       node = new_node(ND_DIV, node, rhs);
       node->type = ty;
     }

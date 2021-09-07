@@ -4,7 +4,7 @@ assert() {
   input="$2"
 
   ./9cc "$input" > tmp.s
-  cc -o tmp tmp.s tmp-plus.o
+  cc -o tmp tmp.s tmp-plus.o tmp-alloc4.o tmp-palloc2.o
   ./tmp
   actual="$?"
 
@@ -17,6 +17,10 @@ assert() {
 }
 
 echo 'int plus(int x, int y) { return x + y; }' | cc -xc -c -o tmp-plus.o -
+echo "#include <stdlib.h>
+void alloc4(int **q, int a, int b, int c, int d) { *q = malloc(4 * sizeof(int)); (*q)[0] = a; (*q)[1] = b; (*q)[2] = c; (*q)[3] = d;}" | cc -xc -c -o tmp-alloc4.o -
+echo "#include <stdlib.h>
+void palloc2(int ***q, int a, int b) {*q = malloc(2 * sizeof(int **)); int **p = *q; p[0] = malloc(sizeof(int*)); p[1] = malloc(sizeof(int*)); *(p[0]) = a; *(p[1]) = b;}" | cc -xc -c -o tmp-palloc2.o -
 
 assert 0 "int main(){0;}"
 assert 42 "int main(){42;}"
@@ -60,6 +64,10 @@ assert 3 'int main(){int x; int *y; y = &x; *y = 3; return x;}'
 assert 3 'int main(){int x; int *y; int **z; y = &x; z = &y; **z = 3; return x;}'
 assert 4 'int add1(int *x){ *x = *x+1;} int main(){int x; x = 3; add1(&x); return x;}'
 assert 3 'int *pointer(int *z){return z;} int main(){int x; int *y; y = &x; x = 3; return *pointer(y);}'
+assert 8 "int main(){int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = 3 + p; return *q;}"
+assert 8 "int main(){int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; return *q;}"
+assert 4 "int main(){int *p; alloc4(&p, 1, 2, 4, 8); int *q; q = p + 3; q = q - 1; return *q;}"
+assert 8 'int main(){int **q; palloc2(&q, 4, 8); q = q + 1; return **q;}'
 
 
 echo OK
