@@ -209,10 +209,10 @@ Token *tokenize(char *p)
 
 Type *tycmp(Type *lty, Type *rty)
 {
-  if (lty == NULL || rty == NULL)
-  {
-    error("tycmp に NULL が渡されています");
-  }
+  if (lty == NULL)
+    return rty;
+  if (rty == NULL)
+    return lty;
 
   switch (lty->kind)
   {
@@ -252,6 +252,7 @@ Node *new_node_num(int val)
 
   node->type = calloc(1, sizeof(Node));
   node->type->kind = TY_INT_LITERAL;
+  node->type->ptr_to = NULL;
   return node;
 }
 
@@ -320,6 +321,7 @@ void program()
   scope->parent = NULL;
   scope->locals = NULL;
   int i = 0;
+  fns[0] = NULL;
   while (!at_eof())
   {
     fns[i++] = function();
@@ -334,9 +336,17 @@ Function *function()
     error("関数宣言の冒頭に型名がありません");
   }
 
+  Type *rety = calloc(1, sizeof(Type));
+  rety->kind = TY_INT;
+  rety->ptr_to = NULL;
   // 返り値の型をパースする
   while (consume("*"))
-    ;
+  {
+    Type *newty = calloc(1, sizeof(Type));
+    newty->kind = TY_PTR;
+    newty->ptr_to = rety;
+    rety = newty;
+  }
 
   Token *tok = consume_ident();
   if (!tok)
@@ -344,8 +354,9 @@ Function *function()
     error("関数名ではありません");
   }
   Function *fn = calloc(1, sizeof(Function));
-  zoom_in();
   fn->name = duplicate(tok->str, tok->len);
+  fn->retype = rety;
+  zoom_in();
 
   expect("(");
   if (!consume(")"))
@@ -520,15 +531,8 @@ Node *assign()
     {
       Node *rhs = assign();
       Type *ty = tycmp(node->type, rhs->type);
-      if (ty)
-      {
-        node = new_node(ND_ASSIGN, node, rhs);
-        node->type = ty;
-      }
-      else
-      {
-        error("両辺の型が一致しません");
-      }
+      node = new_node(ND_ASSIGN, node, rhs);
+      node->type = ty;
       continue;
     }
     break;
@@ -608,29 +612,14 @@ Node *add()
     {
       Node *rhs = mul();
       Type *ty = tycmp(node->type, rhs->type);
-      if (ty)
-      {
-        node = new_node(ND_ADD, node, rhs);
-        node->type = ty;
-      }
-      else
-      {
-        error("両辺の型が一致しません");
-      }
+      node = new_node(ND_ADD, node, rhs);
+      node->type = ty;
     }
     else if (consume("-"))
     {
       Node *rhs = mul();
       Type *ty = tycmp(node->type, rhs->type);
-      if (ty)
-      {
-        node = new_node(ND_SUB, node, rhs);
-        node->type = ty;
-      }
-      else
-      {
-        error("両辺の型が一致しません");
-      }
+      node = new_node(ND_SUB, node, rhs);
     }
     else
     {
@@ -649,29 +638,15 @@ Node *mul()
     {
       Node *rhs = unary();
       Type *ty = tycmp(node->type, rhs->type);
-      if (ty)
-      {
-        node = new_node(ND_MUL, node, rhs);
-        node->type = ty;
-      }
-      else
-      {
-        error("両辺の型が一致しません");
-      }
+      node = new_node(ND_MUL, node, rhs);
+      node->type = ty;
     }
     else if (consume("/"))
     {
       Node *rhs = unary();
       Type *ty = tycmp(node->type, rhs->type);
-      if (ty)
-      {
-        node = new_node(ND_DIV, node, rhs);
-        node->type = ty;
-      }
-      else
-      {
-        error("両辺の型が一致しません");
-      }
+      node = new_node(ND_DIV, node, rhs);
+      node->type = ty;
     }
     else
     {
@@ -731,6 +706,18 @@ Node *parse_func_args()
   return node;
 }
 
+Function *find_func(Token *tok)
+{
+  for (int i = 0; fns[i]; i++)
+  {
+    if (strlen(fns[i]->name) == tok->len && !memcmp(tok->str, fns[i]->name, tok->len))
+    {
+      return fns[i];
+    }
+  }
+  return NULL;
+}
+
 Node *primary()
 {
   // 次のトークンが "(" なら, "(" expr ")" のはず
@@ -747,6 +734,15 @@ Node *primary()
     Node *node = calloc(1, sizeof(Node));
     if (consume("("))
     {
+      Function *fn = find_func(tok);
+      if (fn)
+      {
+        node->type = fn->retype;
+      }
+      else
+      {
+        node->type = NULL;
+      }
       node->kind = ND_CALL;
       node->lhs = parse_func_args();
       node->name = tok->str;

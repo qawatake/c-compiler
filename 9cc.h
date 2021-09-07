@@ -37,8 +37,8 @@ struct Type
     TY_INT_LITERAL, // 整数リテラル
     TY_INT,         // int
     TY_PTR          // ポインタ
-  } kind;        // int or pointer
-  Type *ptr_to;  // ~ 型へのポインタ
+  } kind;           // int or pointer
+  Type *ptr_to;     // ~ 型へのポインタ
 };
 
 typedef struct LVar LVar;
@@ -143,7 +143,12 @@ struct Function
 {
   char *name;
   Node *body;
+  Type *retype; // 返り値の型
 };
+
+// 関数を名前で検索する
+// 見つからなかった場合はNULLを返す
+Function *find_func(Token *tok);
 
 // ノードの型を比較
 // 一致すれば, その型の Type* を返す
