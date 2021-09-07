@@ -207,6 +207,34 @@ Token *tokenize(char *p)
   return head.next;
 }
 
+Type *tycmp(Type *lty, Type *rty)
+{
+  if (lty == NULL || rty == NULL)
+  {
+    error("tycmp に NULL が渡されています");
+  }
+
+  switch (lty->kind)
+  {
+  case TY_INT:
+    if (rty->kind == TY_INT || rty->kind == TY_INT_LITERAL)
+      return lty;
+    return NULL;
+  case TY_INT_LITERAL:
+    if (rty->kind == TY_INT)
+      return rty;
+    if (rty->kind == TY_INT_LITERAL)
+      return lty;
+    return NULL;
+  case TY_PTR:
+    if (rty->kind != TY_PTR)
+      return NULL;
+    if (tycmp(lty->ptr_to, rty->ptr_to))
+      return lty;
+    return NULL;
+  }
+}
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
   Node *node = calloc(1, sizeof(Node));
@@ -221,6 +249,9 @@ Node *new_node_num(int val)
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_NUM;
   node->val = val;
+
+  node->type = calloc(1, sizeof(Node));
+  node->type->kind = TY_INT_LITERAL;
   return node;
 }
 
@@ -304,7 +335,8 @@ Function *function()
   }
 
   // 返り値の型をパースする
-  while (consume("*"));
+  while (consume("*"))
+    ;
 
   Token *tok = consume_ident();
   if (!tok)
@@ -324,12 +356,12 @@ Function *function()
         error("関数の引数の冒頭に型名がありません");
 
       Type *ty = calloc(1, sizeof(Type));
-      ty->kind = INT;
+      ty->kind = TY_INT;
       ty->ptr_to = NULL;
       while (consume("*"))
       {
         Type *newty = calloc(1, sizeof(Type));
-        newty->kind = PTR;
+        newty->kind = TY_PTR;
         newty->ptr_to = ty;
         ty = newty;
       }
@@ -397,13 +429,13 @@ Node *stmt()
     node->kind = ND_NONE;
 
     Type *ty = calloc(1, sizeof(Type));
-    ty->kind = INT;
+    ty->kind = TY_INT;
     ty->ptr_to = NULL;
 
     while (consume("*"))
     {
       Type *newty = calloc(1, sizeof(Type));
-      newty->kind = PTR;
+      newty->kind = TY_PTR;
       newty->ptr_to = ty;
       ty = newty;
     }
@@ -486,7 +518,17 @@ Node *assign()
   {
     if (consume("="))
     {
-      node = new_node(ND_ASSIGN, node, assign());
+      Node *rhs = assign();
+      Type *ty = tycmp(node->type, rhs->type);
+      if (ty)
+      {
+        node = new_node(ND_ASSIGN, node, rhs);
+        node->type = ty;
+      }
+      else
+      {
+        error("両辺の型が一致しません");
+      }
       continue;
     }
     break;
@@ -503,10 +545,14 @@ Node *equality()
     if (consume("=="))
     {
       node = new_node(ND_EQ, node, relational());
+      node->type = calloc(1, sizeof(Type));
+      node->type->kind = TY_INT;
     }
     else if (consume("!="))
     {
       node = new_node(ND_NE, node, relational());
+      node->type = calloc(1, sizeof(Type));
+      node->type->kind = TY_INT;
     }
     else
     {
@@ -524,18 +570,26 @@ Node *relational()
     if (consume(">"))
     {
       node = new_node(ND_L, add(), node);
+      node->type = calloc(1, sizeof(Type));
+      node->type->kind = TY_INT;
     }
     else if (consume("<"))
     {
       node = new_node(ND_L, node, add());
+      node->type = calloc(1, sizeof(Type));
+      node->type->kind = TY_INT;
     }
     else if (consume(">="))
     {
       node = new_node(ND_LE, add(), node);
+      node->type = calloc(1, sizeof(Type));
+      node->type->kind = TY_INT;
     }
     else if (consume("<="))
     {
       node = new_node(ND_LE, node, add());
+      node->type = calloc(1, sizeof(Type));
+      node->type->kind = TY_INT;
     }
     else
     {
@@ -552,11 +606,31 @@ Node *add()
   {
     if (consume("+"))
     {
-      node = new_node(ND_ADD, node, mul());
+      Node *rhs = mul();
+      Type *ty = tycmp(node->type, rhs->type);
+      if (ty)
+      {
+        node = new_node(ND_ADD, node, rhs);
+        node->type = ty;
+      }
+      else
+      {
+        error("両辺の型が一致しません");
+      }
     }
     else if (consume("-"))
     {
-      node = new_node(ND_SUB, node, mul());
+      Node *rhs = mul();
+      Type *ty = tycmp(node->type, rhs->type);
+      if (ty)
+      {
+        node = new_node(ND_SUB, node, rhs);
+        node->type = ty;
+      }
+      else
+      {
+        error("両辺の型が一致しません");
+      }
     }
     else
     {
@@ -573,11 +647,31 @@ Node *mul()
   {
     if (consume("*"))
     {
-      node = new_node(ND_MUL, node, unary());
+      Node *rhs = unary();
+      Type *ty = tycmp(node->type, rhs->type);
+      if (ty)
+      {
+        node = new_node(ND_MUL, node, rhs);
+        node->type = ty;
+      }
+      else
+      {
+        error("両辺の型が一致しません");
+      }
     }
     else if (consume("/"))
     {
-      node = new_node(ND_DIV, node, unary());
+      Node *rhs = unary();
+      Type *ty = tycmp(node->type, rhs->type);
+      if (ty)
+      {
+        node = new_node(ND_DIV, node, rhs);
+        node->type = ty;
+      }
+      else
+      {
+        error("両辺の型が一致しません");
+      }
     }
     else
     {
@@ -590,7 +684,10 @@ Node *unary()
 {
   if (consume("-"))
   {
-    return new_node(ND_SUB, new_node_num(0), primary());
+    Node *rhs = primary();
+    Node *node = new_node(ND_SUB, new_node_num(0), rhs);
+    node->type = rhs->type;
+    return node;
   }
   if (consume("+"))
   {
@@ -598,11 +695,19 @@ Node *unary()
   }
   if (consume("&"))
   {
-    return new_node(ND_ADDR, unary(), NULL);
+    Node *lhs = unary();
+    Node *node = new_node(ND_ADDR, lhs, NULL);
+    node->type = calloc(1, sizeof(Type));
+    node->type->kind = TY_PTR;
+    node->type->ptr_to = lhs->type;
+    return node;
   }
   if (consume("*"))
   {
-    return new_node(ND_DEREF, unary(), NULL);
+    Node *lhs = unary();
+    Node *node = new_node(ND_DEREF, lhs, NULL);
+    node->type = lhs->type->ptr_to;
+    return node;
   }
   return primary();
 }
@@ -657,6 +762,7 @@ Node *primary()
     }
 
     node->offset = lvar->offset;
+    node->type = lvar->type;
     return node;
   }
 

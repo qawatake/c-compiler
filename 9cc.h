@@ -34,10 +34,11 @@ struct Type
 {
   enum
   {
-    INT,
-    PTR
-  } kind;       // int or pointer
-  Type *ptr_to; // ~ 型へのポインタ
+    TY_INT_LITERAL, // 整数リテラル
+    TY_INT,         // int
+    TY_PTR          // ポインタ
+  } kind;        // int or pointer
+  Type *ptr_to;  // ~ 型へのポインタ
 };
 
 typedef struct LVar LVar;
@@ -132,6 +133,7 @@ struct Node
   Node *rhs;     // 右辺
   int val;       // kind が ND_NUM の場合のみ使う
   int offset;    // kind が ND_LVAR の場合のみ使う
+  Type *type;    // kind が ND_LVAR の場合のみ使う
   char *name;    // kind が ND_CALL の場合のみ使う
   int len;       // kind が ND_CALL の場合のみ使う
 };
@@ -142,6 +144,11 @@ struct Function
   char *name;
   Node *body;
 };
+
+// ノードの型を比較
+// 一致すれば, その型の Type* を返す
+// 一致しなければ, NULL を返す
+Type *tycmp(Type *lty, Type *rty);
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
