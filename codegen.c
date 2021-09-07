@@ -203,6 +203,7 @@ void gen(Node *node)
     gen(node->lhs); // 初期化
     printf("  pop rax\n");
     gen(node->rhs); // while 文
+    return;
   case ND_RETURN:
     gen(node->lhs);
     printf("  pop rax\n");

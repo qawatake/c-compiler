@@ -250,7 +250,7 @@ Node *new_node_num(int val)
   node->kind = ND_NUM;
   node->val = val;
 
-  node->type = calloc(1, sizeof(Node));
+  node->type = calloc(1, sizeof(Type));
   node->type->kind = TY_INT_LITERAL;
   node->type->ptr_to = NULL;
   return node;
@@ -259,6 +259,7 @@ Node *new_node_num(int val)
 Node *parse_for_contents()
 {
   Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_FOR;
   expect("(");
   if (consume(";"))
   {
