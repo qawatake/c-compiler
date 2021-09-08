@@ -24,7 +24,7 @@ void error_at(char *loc, char *fmt, ...)
 // それ以外の場合には偽を返す
 bool consume(char *op)
 {
-  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR && token->kind != TK_INT)
+  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR && token->kind != TK_INT && token->kind != TK_SIZEOF)
     return false;
   else if (token->len != strlen(op) || memcmp(token->str, op, token->len))
     return false;
@@ -187,6 +187,13 @@ Token *tokenize(char *p)
       continue;
     }
 
+    if (strncmp(p, "sizeof", 6) == 0 && !is_alnum(p[6]))
+    {
+      cur = new_token(TK_SIZEOF, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     if (isalpha(*p))
     {
       char *q = p + 1;
@@ -238,7 +245,6 @@ int tycmp(Type *lty, Type *rty)
       return tycmp(lty->ptr_to, rty->ptr_to);
     }
     error("両辺の型が不整合です");
-
   }
 }
 
@@ -258,6 +264,8 @@ Size size(Type *ty)
 {
   switch (ty->kind)
   {
+  case TY_INT_LITERAL:
+    return SIZE_INT;
   case TY_INT:
     return SIZE_INT;
   case TY_PTR:
@@ -693,14 +701,14 @@ Node *unary()
 {
   if (consume("-"))
   {
-    Node *rhs = primary();
+    Node *rhs = unary();
     Node *node = new_node(ND_SUB, new_node_num(0), rhs);
     node->type = rhs->type;
     return node;
   }
   if (consume("+"))
   {
-    return primary();
+    return unary();
   }
   if (consume("&"))
   {
@@ -717,6 +725,11 @@ Node *unary()
     Node *node = new_node(ND_DEREF, lhs, NULL);
     node->type = lhs->type->ptr_to;
     return node;
+  }
+  if (consume("sizeof"))
+  {
+    Node *child = unary();
+    return new_node_num(size(child->type));
   }
   return primary();
 }

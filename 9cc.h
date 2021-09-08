@@ -12,6 +12,7 @@ typedef enum
   TK_WHILE,    // while
   TK_FOR,      // for
   TK_INT,      // int
+  TK_SIZEOF,   // sizeof
   TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
   TK_EOF,      // 入力の終わりを表すトークン
@@ -45,7 +46,7 @@ struct Type
     TY_INT,         // int
     TY_PTR          // ポインタ
   } kind;           // int or pointer
-  Type *ptr_to; // ~ 型へのポインタ
+  Type *ptr_to;     // ~ 型へのポインタ
 };
 
 Size size(Type *ty);
