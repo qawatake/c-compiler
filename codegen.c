@@ -103,7 +103,7 @@ void gen_func(Function *fn)
   printf("  push rbx\n");
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 208\n");
+  printf("  sub rsp, %d\n", fn->offset);
 
   char *reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
   for (int i = 0; i < 6; i++)
@@ -154,7 +154,17 @@ void gen(Node *node)
   case ND_LVAR:
     gen_lval(node);
     printf("  pop rax\n");
-    printf("  mov rax, [rax]\n");
+
+    switch (size(node->type))
+    {
+      case SIZE_INT:
+        printf("  mov eax, [rax]\n");
+      break;
+      case SIZE_PTR:
+        printf("  mov rax, [rax]\n");
+      break;
+    }
+
     printf("  push rax\n");
     return;
   case ND_ADDR:
@@ -163,7 +173,17 @@ void gen(Node *node)
   case ND_DEREF:
     gen(node->lhs);
     printf("  pop rax\n");
-    printf("  mov rax, [rax]\n");
+
+    switch (size(node->type))
+    {
+      case SIZE_INT:
+        printf("  mov eax, [rax]\n");
+      break;
+      case SIZE_PTR:
+        printf("  mov rax, [rax]\n");
+      break;
+    }
+
     printf("  push rax\n");
     return;
   case ND_CALL:
@@ -175,7 +195,17 @@ void gen(Node *node)
 
     printf("  pop rdi\n");
     printf("  pop rax\n");
-    printf("  mov [rax], rdi\n");
+
+    switch (size(node->type))
+    {
+      case SIZE_INT:
+        printf("  mov [rax], edi\n");
+      break;
+      case SIZE_PTR:
+        printf("  mov [rax], rdi\n");
+      break;
+    }
+
     printf("  push rdi\n");
     return;
   case ND_IF:

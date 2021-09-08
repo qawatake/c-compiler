@@ -156,6 +156,7 @@ struct Function
   char *name;
   Node *body;
   Type *retype; // 返り値の型
+  int offset; // ローカル変数のデータ保持のために必要なメモリ数
 };
 
 // 関数を名前で検索する
@@ -211,6 +212,7 @@ struct Scope
 {
   Scope *parent;
   LVar *locals;
+  int offset; // 子スコープで使用された最大のメモリ数
 };
 
 // 1つ下のスコープに入る

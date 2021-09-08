@@ -351,12 +351,15 @@ void zoom_in()
   Scope *child = calloc(1, sizeof(Scope));
   child->parent = scope;
   child->locals = NULL;
+  child->offset = 0;
   scope = child;
 }
 
 void zoom_out()
 {
   Scope *cur = scope;
+  int loffset = (scope->locals) ? scope->locals->offset : 0;
+  scope->parent->offset = (loffset + scope->offset >= scope->parent->offset) ? (loffset + scope->offset) : scope->parent->offset; // 子スコープのうち最大の使用メモリ数に更新
   while (cur->locals != NULL)
   {
     LVar *next = cur->locals->next;
@@ -372,11 +375,14 @@ void program()
   scope = calloc(1, sizeof(Scope));
   scope->parent = NULL;
   scope->locals = NULL;
+  scope->offset = 0;
   int i = 0;
   fns[0] = NULL;
   while (!at_eof())
   {
-    fns[i++] = function();
+    fns[i] = function();
+    fns[i]->offset = scope->offset;
+    i++;
   }
   fns[i] = NULL;
 }
@@ -507,7 +513,7 @@ void var_assertion(Type *btype)
   else
   {
     lvar->type = cur;
-    lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
+    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : size(lvar->type);
     scope->locals = lvar;
   }
 }
