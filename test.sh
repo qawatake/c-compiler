@@ -74,5 +74,8 @@ assert 4 "int main(){int x; return sizeof(x + 3);}"
 assert 12 "int main(){int a[3]; return sizeof a;}"
 assert 3 "int main(){int a[2]; *a = 3; return *a;}"
 assert 3 "int main(){int a[2]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p + *(p + 1);}"
+assert 2 "int main(){int x[2]; x[0] = 1; x[1] = 2; return 1[x];}"
+assert 2 'int main(){int x[2]; x[0] = 1; x[1] = 2; return x[1];}'
+assert 2 "int main(){int *y; int x; y = &x; x = 2; y[0];}"
 
 echo OK

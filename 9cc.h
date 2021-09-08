@@ -192,6 +192,7 @@ Node *add();
 Node *mul();
 Node *unary();
 Node *parse_func_args();
+Node *comp();
 Node *primary();
 
 // call 呼び出し前のアラインメント

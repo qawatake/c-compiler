@@ -770,7 +770,7 @@ Node *unary()
     Node *child = unary();
     return new_node_num(size(child->type));
   }
-  return primary();
+  return comp();
 }
 
 Node *parse_func_args()
@@ -802,6 +802,29 @@ Function *find_func(Token *tok)
     }
   }
   return NULL;
+}
+
+Node *comp()
+{
+  Node *node = primary();
+
+  for (;;)
+  {
+    if (consume("["))
+    {
+      Node *inside = expr();
+      expect("]");
+      Type *ty = tyjoin(node->type, inside->type);
+      node = new_node(ND_ADD, node, inside);
+      node->type = ty;
+      node = new_node(ND_DEREF, node, NULL);
+      node->type = ty->ptr_to;
+    }
+    else
+    {
+      return node;
+    }
+  }
 }
 
 Node *primary()
