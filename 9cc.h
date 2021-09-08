@@ -42,11 +42,13 @@ struct Type
 {
   enum
   {
-    TY_INT_LITERAL, // 整数リテラル
-    TY_INT,         // int
-    TY_PTR          // ポインタ
-  } kind;           // int or pointer
-  Type *ptr_to;     // ~ 型へのポインタ
+    TY_INT_LITERAL,  // 整数リテラル
+    TY_INT,          // int
+    TY_PTR,          // ポインタ
+    TY_ARRAY,        // 配列
+  } kind;            // int or pointer
+  Type *ptr_to;      // ~ 型へのポインタ
+  size_t array_size; // 配列の要素数
 };
 
 Size size(Type *ty);
@@ -171,6 +173,10 @@ int tycmp(Type *lty, Type *rty);
 // 合成したノードの型を返す
 Type *tyjoin(Type *lty, Type *rty);
 
+// 変数宣言を解析する
+// 型派生の最下流 (変数宣言の冒頭の型)を与えると, 変数を登録する
+void var_assertion(Type *btype);
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 Node *parse_for_contents();
@@ -193,6 +199,8 @@ void align();
 // call 呼び出し後のアラインメント
 void dealign();
 
+// 配列をポインタとして使うためのコード生成
+void gen_array(Node *node);
 void gen_lval(Node *node);
 void gen_call(Node *node);
 void gen_func(Function *fn);

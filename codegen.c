@@ -1,11 +1,26 @@
 #include <stdio.h>
 #include "9cc.h"
 
+void gen_array(Node *node)
+{
+  printf("  mov rax, rbp\n");
+  printf("  sub rax, %d\n", node->offset - size(node->type)); // 配列内部のポインタのアドレス
+  printf("  mov rdi, rbp\n");
+  printf("  sub rdi, %d\n", node->offset); // 配列の第0要素のアドレス
+  printf("  mov [rax], rdi\n");
+  printf("  push rax\n");
+}
+
 void gen_lval(Node *node)
 {
   switch (node->kind)
   {
   case ND_LVAR:
+    if (node->type->kind == TY_ARRAY)
+    {
+      gen_array(node);
+      return;
+    }
     printf("  mov rax, rbp\n");
     printf("  sub rax, %d\n", node->offset);
     printf("  push rax\n");
@@ -219,15 +234,15 @@ void gen(Node *node)
   case ND_ADD:
     if (node->type->kind == TY_PTR)
     {
-      if (node->lhs->type->kind == TY_PTR && node->rhs->type->kind == TY_PTR)
-        error("ポインタとポインタの演算が行われています");
+      // if (node->lhs->type->kind == TY_PTR && node->rhs->type->kind == TY_PTR)
+      //   error("ポインタとポインタの演算が行われています");
 
-      if (node->lhs->type->kind == TY_PTR)
+      if (node->lhs->type->kind == TY_PTR || node->lhs->type->kind == TY_ARRAY)
       {
         gen(node->lhs);
         gen(node->rhs);
       }
-      if (node->rhs->type->kind == TY_PTR)
+      if (node->rhs->type->kind == TY_PTR || node->rhs->type->kind == TY_ARRAY)
       {
         gen(node->rhs);
         gen(node->lhs);
@@ -252,7 +267,7 @@ void gen(Node *node)
     gen(node->rhs);
     if (node->type->kind == TY_PTR)
     {
-      if (node->rhs->type->kind == TY_PTR)
+      if (node->rhs->type->kind == TY_PTR || node->rhs->type->kind == TY_ARRAY)
         error("引き算の左辺にポインタが配置されています");
 
       printf("  pop rax\n");

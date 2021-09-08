@@ -130,7 +130,7 @@ Token *tokenize(char *p)
     }
 
     // Single-letter punctuator
-    if (strchr("+-*/()<>=;{},&", *p))
+    if (strchr("+-*/()<>=;{},&[]", *p))
     {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
@@ -228,17 +228,24 @@ int tycmp(Type *lty, Type *rty)
       return -1;
     if (rty->kind == TY_INT)
       return 0;
-    if (rty->kind == TY_PTR)
+    if (rty->kind == TY_PTR || rty->kind == TY_ARRAY)
       return 1;
     error("両辺の型が不整合です");
   case TY_INT_LITERAL:
     if (rty->kind == TY_INT_LITERAL)
       return 0;
-    if (rty->kind == TY_INT || rty->kind == TY_PTR)
+    if (rty->kind == TY_INT || rty->kind == TY_PTR || rty->kind == TY_ARRAY)
       return 1;
     error("両辺の型が不整合です");
-  case TY_PTR:
+  case TY_ARRAY:
     if (rty->kind == TY_INT_LITERAL || rty->kind == TY_INT)
+      return -1;
+    if (rty->kind == TY_ARRAY)
+      return 0;
+    if (rty->kind == TY_PTR)
+      return 1;
+  case TY_PTR:
+    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_INT || rty->kind == TY_ARRAY)
       return -1;
     if (rty->kind == TY_PTR)
     {
@@ -250,14 +257,16 @@ int tycmp(Type *lty, Type *rty)
 
 Type *tyjoin(Type *lty, Type *rty)
 {
-  if (tycmp(lty, rty) <= 0)
-  {
+  if (tycmp(lty, rty) > 0)
+    return tyjoin(rty, lty);
+
+  if (lty->kind != TY_ARRAY)
     return lty;
-  }
-  else
-  {
-    return rty;
-  }
+
+  Type *newty = calloc(1, sizeof(Type));
+  newty->kind = TY_PTR;
+  newty->ptr_to = lty->ptr_to;
+  return newty;
 }
 
 Size size(Type *ty)
@@ -270,6 +279,8 @@ Size size(Type *ty)
     return SIZE_INT;
   case TY_PTR:
     return SIZE_PTR;
+  case TY_ARRAY:
+    return (ty->array_size) * size(ty->ptr_to);
   default:
     error("サイズが定義されていません");
   }
@@ -453,6 +464,54 @@ Function *function()
   return fn;
 }
 
+void var_assertion(Type *btype)
+{
+  Type *cur = btype;
+  while (consume("*"))
+  {
+    Type *newty = calloc(1, sizeof(Type));
+    newty->kind = TY_PTR;
+    newty->ptr_to = cur;
+    cur = newty;
+  }
+
+  Token *tok = consume_ident();
+  if (!tok)
+  {
+    error("変数名がありません");
+  }
+
+  LVar *lvar = find_lvar(tok);
+  if (lvar)
+  {
+    error("すでに宣言された変数です");
+  }
+
+  lvar = calloc(1, sizeof(LVar));
+  lvar->next = scope->locals;
+  lvar->name = tok->str;
+  lvar->len = tok->len;
+
+  if (consume("["))
+  {
+    Type *newty = calloc(1, sizeof(Type));
+    newty->kind = TY_ARRAY;
+    newty->ptr_to = cur;
+    newty->array_size = expect_number();
+    cur = newty;
+    expect("]");
+    lvar->type = cur;
+    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) + 8 : size(lvar->type) + 8;
+    scope->locals = lvar;
+  }
+  else
+  {
+    lvar->type = cur;
+    lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
+    scope->locals = lvar;
+  }
+}
+
 Node *stmt()
 {
   Node *node;
@@ -484,33 +543,7 @@ Node *stmt()
     ty->kind = TY_INT;
     ty->ptr_to = NULL;
 
-    while (consume("*"))
-    {
-      Type *newty = calloc(1, sizeof(Type));
-      newty->kind = TY_PTR;
-      newty->ptr_to = ty;
-      ty = newty;
-    }
-
-    Token *tok = consume_ident();
-    if (!tok)
-    {
-      error("変数名がありません");
-    }
-
-    LVar *lvar = find_lvar(tok);
-    if (lvar)
-    {
-      error("すでに宣言された変数です");
-    }
-
-    lvar = calloc(1, sizeof(LVar));
-    lvar->next = scope->locals;
-    lvar->name = tok->str;
-    lvar->len = tok->len;
-    lvar->type = ty;
-    lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
-    scope->locals = lvar;
+    var_assertion(ty);
 
     expect(";");
   }
