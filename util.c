@@ -34,3 +34,14 @@ char* duplicate(char *str, size_t len) {
 
     return buffer;
 }
+
+int scpdepth(Scope *scp)
+{
+  int i = 0;
+  while (scp)
+  {
+    scp = scp->parent;
+    i++;
+  }
+  return i;
+}

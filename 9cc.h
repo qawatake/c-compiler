@@ -159,6 +159,8 @@ void error_at(char *loc, char *fmt, ...);
 // コピー文字列を生成し, 先頭へのポインタを返す
 char *duplicate(char *str, size_t len);
 
+// スコープの深さを返す
+int scpdepth(Scope *scp);
 
 /* token.c
   トークナイザの実装
@@ -191,10 +193,6 @@ bool startswith(char *p, char *q);
 // 英数字かアンダースコアかどうかを判定
 bool is_alnum(char c);
 
-// 変数を名前で検索する
-// 見つからなかった場合はNULLを返す
-LVar *find_lvar(Token *tok);
-
 // 入力文字列 p をトークナイズしてそれを返す
 Token *tokenize(char *p);
 
@@ -206,13 +204,6 @@ Token *tokenize(char *p);
   再帰降下構文解析器の実装
 */
 
-// sizeof に相当する役割
-Size size(Type *ty);
-
-// 関数を名前で検索する
-// 見つからなかった場合はNULLを返す
-Function *find_func(Token *tok);
-
 // ノードの型を比較
 // lty の方が強い型ならば, -1 を返す
 // 同じ型ならば, 0 を返す
@@ -223,6 +214,21 @@ int tycmp(Type *lty, Type *rty);
 
 // 合成したノードの型を返す
 Type *tyjoin(Type *lty, Type *rty);
+
+// sizeof に相当する役割
+Size size(Type *ty);
+
+// 現在のスコープに限定して, 変数を名前で検索する
+// 見つからなかった場合は NULL を返す
+LVar *find_lvar(Scope *scp, Token *tok);
+
+// 変数を名前で検索する
+// 見つからなかった場合はNULLを返す
+LVar *find_gvar(Token *tok);
+
+// 関数を名前で検索する
+// 見つからなかった場合はNULLを返す
+Function *find_func(Token *tok);
 
 // 1つ下のスコープに入る
 void zoom_in();

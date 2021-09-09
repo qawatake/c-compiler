@@ -5,7 +5,6 @@
 #include <string.h>
 #include "9cc.h"
 
-
 int tycmp(Type *lty, Type *rty)
 {
   if (lty == NULL)
@@ -78,6 +77,59 @@ Size size(Type *ty)
   }
 }
 
+LVar *find_lvar(Scope *scp, Token *tok)
+{
+  for (LVar *var = scp->locals; var; var = var->next)
+  {
+    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+    {
+      return var;
+    }
+  }
+
+  return NULL;
+}
+
+LVar *find_gvar(Token *tok)
+{
+  Scope *cur = scope;
+
+  while (cur)
+  {
+    LVar *lvar = find_lvar(cur, tok);
+
+    if (lvar)
+      return lvar;
+
+    cur = cur->parent;
+  }
+  return NULL;
+}
+
+void zoom_in()
+{
+  Scope *child = calloc(1, sizeof(Scope));
+  child->parent = scope;
+  child->locals = NULL;
+  child->offset = (scope->locals) ? scope->locals->offset : scope->offset;
+  scope = child;
+}
+
+void zoom_out()
+{
+  Scope *cur = scope;
+  int loffset = (scope->locals) ? scope->locals->offset : 0;
+  scope->parent->offset = (loffset + scope->offset >= scope->parent->offset) ? (loffset + scope->offset) : scope->parent->offset; // 子スコープのうち最大の使用メモリ数に更新
+  while (cur->locals != NULL)
+  {
+    LVar *next = cur->locals->next;
+    free(cur->locals);
+    cur->locals = next;
+  }
+  scope = scope->parent;
+  free(cur);
+}
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
   Node *node = calloc(1, sizeof(Node));
@@ -138,36 +190,8 @@ Node *parse_for_contents()
   return node;
 }
 
-void zoom_in()
-{
-  Scope *child = calloc(1, sizeof(Scope));
-  child->parent = scope;
-  child->locals = NULL;
-  child->offset = 0;
-  scope = child;
-}
-
-void zoom_out()
-{
-  Scope *cur = scope;
-  int loffset = (scope->locals) ? scope->locals->offset : 0;
-  scope->parent->offset = (loffset + scope->offset >= scope->parent->offset) ? (loffset + scope->offset) : scope->parent->offset; // 子スコープのうち最大の使用メモリ数に更新
-  while (cur->locals != NULL)
-  {
-    LVar *next = cur->locals->next;
-    free(cur->locals);
-    cur->locals = next;
-  }
-  scope = scope->parent;
-  free(cur);
-}
-
 void program()
 {
-  scope = calloc(1, sizeof(Scope));
-  scope->parent = NULL;
-  scope->locals = NULL;
-  scope->offset = 0;
   int i = 0;
   fns[0] = NULL;
   while (!at_eof())
@@ -233,7 +257,7 @@ Function *function()
       lvar->name = tok->str;
       lvar->len = tok->len;
       lvar->type = ty;
-      lvar->offset = (scope->locals) ? scope->locals->offset + 8 : 8;
+      lvar->offset = (scope->locals) ? scope->locals->offset + 8 : scope->offset + 8;
       scope->locals = lvar;
       if (consume(","))
         continue;
@@ -279,7 +303,7 @@ void var_assertion(Type *btype)
     error("変数名がありません");
   }
 
-  LVar *lvar = find_lvar(tok);
+  LVar *lvar = find_lvar(scope, tok);
   if (lvar)
   {
     error("すでに宣言された変数です");
@@ -299,13 +323,13 @@ void var_assertion(Type *btype)
     cur = newty;
     expect("]");
     lvar->type = cur;
-    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) + 8 : size(lvar->type) + 8;
+    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) + 8 : scope->offset + size(lvar->type) + 8;
     scope->locals = lvar;
   }
   else
   {
     lvar->type = cur;
-    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : size(lvar->type);
+    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
     scope->locals = lvar;
   }
 }
@@ -313,8 +337,9 @@ void var_assertion(Type *btype)
 Node *stmt()
 {
   Node *node;
-  if (consume("{"))
+  if (consume("{")) // ブロック文
   {
+    zoom_in();
     node = new_node(ND_COMP_STMT, NULL, NULL);
     Node *cur = node;
     while (!consume("}"))
@@ -324,6 +349,7 @@ Node *stmt()
       cur = cur->rhs;
     }
     cur->kind = ND_NONE;
+    zoom_out();
   }
   else if (consume("return"))
   {
@@ -347,6 +373,7 @@ Node *stmt()
   }
   else if (consume("if"))
   {
+    zoom_in();
     node = calloc(1, sizeof(Node));
     node->kind = ND_IF;
     expect("(");
@@ -366,6 +393,7 @@ Node *stmt()
     {
       node->rhs = node_true;
     }
+    zoom_out();
   }
   else if (consume("while"))
   {
@@ -378,7 +406,9 @@ Node *stmt()
   }
   else if (consume("for"))
   {
+    zoom_in();
     node = parse_for_contents();
+    zoom_out();
   }
   else
   {
@@ -652,7 +682,7 @@ Node *primary()
     }
 
     node->kind = ND_LVAR;
-    LVar *lvar = find_lvar(tok);
+    LVar *lvar = find_gvar(tok);
     if (!lvar)
     {
       error("宣言されていない変数です");

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "9cc.h"
 
 Token *token;
@@ -16,9 +17,17 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  // トークナイズしてパースする
+  // トークナイズ
   user_input = argv[1];
   token = tokenize(user_input);
+
+  // スコープの初期設定
+  scope = calloc(1, sizeof(Scope));
+  scope->parent = NULL;
+  scope->locals = NULL;
+  scope->offset = 0;
+
+  // パース
   program();
 
   // アセンブリの前半部分を出力
