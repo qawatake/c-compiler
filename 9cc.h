@@ -2,6 +2,8 @@
 #define _INCLUDE_9CC_H_
 #include <stdbool.h>
 
+/* 変数・型の宣言 */
+
 // トークンの種類
 typedef enum
 {
@@ -51,10 +53,8 @@ struct Type
   size_t array_size; // 配列の要素数
 };
 
-Size size(Type *ty);
-
-typedef struct LVar LVar;
 // ローカル変数
+typedef struct LVar LVar;
 struct LVar
 {
   LVar *next; // 次の変数か NULL
@@ -63,49 +63,6 @@ struct LVar
   int offset; // ベースポインタ (RBP) からのオフセット
   Type *type; // 変数の型
 };
-
-// エラーを報告するための関数
-// printfと同じ引数を取る
-void error(char *fmt, ...);
-
-// エラー箇所をを報告する
-void error_at(char *loc, char *fmt, ...);
-
-char *duplicate(char *str, size_t len);
-
-// 次のトークンが期待している記号のときには, トークンを1つ進めて真を返す
-// それ以外の場合には偽を返す
-bool consume(char *op);
-
-// 次のトークンが識別子のときには, トークンを1つ進めてトークンを返す
-// それ以外の場合には偽を返す
-Token *consume_ident();
-
-// 次のトークンが期待している記号のときには, トークンを1つ進める
-// それ以外の場合にはエラーを報告する
-void expect(char *op);
-
-// 次のトークンが数値の場合, トークンを1つ読み進めてその数値を返す
-// それ以外の場合にはエラーを報告する
-int expect_number();
-
-bool at_eof();
-
-// 新しいトークンを作成して cur に繋げる
-Token *new_token(TokenKind kind, Token *cur, char *str, int len);
-
-// Multi-letter punctuator か判定
-bool startswith(char *p, char *q);
-
-// 英数字かアンダースコアかどうかを判定
-bool is_alnum(char c);
-
-// 変数を名前で検索する
-// 見つからなかった場合はNULLを返す
-LVar *find_lvar(Token *tok);
-
-// 入力文字列 p をトークナイズしてそれを返す
-Token *tokenize(char *p);
 
 // 抽象構文木のノードの種類
 typedef enum
@@ -159,6 +116,99 @@ struct Function
   int offset; // ローカル変数のデータ保持のために必要なメモリ数
 };
 
+
+typedef struct Scope Scope;
+struct Scope
+{
+  Scope *parent;
+  LVar *locals;
+  int offset; // 子スコープで使用された最大のメモリ数
+};
+
+/* グローバル変数の宣言 */
+
+// 現在注目しているトークン
+extern Token *token;
+
+// ローカル変数
+extern LVar *locals;
+
+// 入力プログラム
+extern char *user_input;
+
+// ループの数
+extern int lnum;
+
+// 複数の関数
+extern Function *fns[100];
+
+// スコープ
+extern Scope *scope;
+
+
+
+/* util.c */
+
+// エラーを報告するための関数
+// printfと同じ引数を取る
+void error(char *fmt, ...);
+
+// エラー箇所をを報告する
+void error_at(char *loc, char *fmt, ...);
+
+// コピー文字列を生成し, 先頭へのポインタを返す
+char *duplicate(char *str, size_t len);
+
+
+/* token.c
+  トークナイザの実装
+*/
+
+// 次のトークンが期待している記号のときには, トークンを1つ進めて真を返す
+// それ以外の場合には偽を返す
+bool consume(char *op);
+
+// 次のトークンが識別子のときには, トークンを1つ進めてトークンを返す
+// それ以外の場合には偽を返す
+Token *consume_ident();
+
+// 次のトークンが期待している記号のときには, トークンを1つ進める
+// それ以外の場合にはエラーを報告する
+void expect(char *op);
+
+// 次のトークンが数値の場合, トークンを1つ読み進めてその数値を返す
+// それ以外の場合にはエラーを報告する
+int expect_number();
+
+bool at_eof();
+
+// 新しいトークンを作成して cur に繋げる
+Token *new_token(TokenKind kind, Token *cur, char *str, int len);
+
+// Multi-letter punctuator か判定
+bool startswith(char *p, char *q);
+
+// 英数字かアンダースコアかどうかを判定
+bool is_alnum(char c);
+
+// 変数を名前で検索する
+// 見つからなかった場合はNULLを返す
+LVar *find_lvar(Token *tok);
+
+// 入力文字列 p をトークナイズしてそれを返す
+Token *tokenize(char *p);
+
+
+
+
+/* parse.c
+  構文木を生成
+  再帰降下構文解析器の実装
+*/
+
+// sizeof に相当する役割
+Size size(Type *ty);
+
 // 関数を名前で検索する
 // 見つからなかった場合はNULLを返す
 Function *find_func(Token *tok);
@@ -173,6 +223,11 @@ int tycmp(Type *lty, Type *rty);
 
 // 合成したノードの型を返す
 Type *tyjoin(Type *lty, Type *rty);
+
+// 1つ下のスコープに入る
+void zoom_in();
+// 現在のスコープを抜ける
+void zoom_out();
 
 // 変数宣言を解析する
 // 型派生の最下流 (変数宣言の冒頭の型)を与えると, 変数を登録する
@@ -195,6 +250,12 @@ Node *parse_func_args();
 Node *comp();
 Node *primary();
 
+
+
+/* codegen.c
+  構文木に沿って, コード生成
+*/
+
 // call 呼び出し前のアラインメント
 // r10, r11, r12 レジスタが書き換えられる
 void align();
@@ -207,36 +268,5 @@ void gen_lval(Node *node);
 void gen_call(Node *node);
 void gen_func(Function *fn);
 void gen(Node *node);
-
-typedef struct Scope Scope;
-struct Scope
-{
-  Scope *parent;
-  LVar *locals;
-  int offset; // 子スコープで使用された最大のメモリ数
-};
-
-// 1つ下のスコープに入る
-void zoom_in();
-// 現在のスコープを抜ける
-void zoom_out();
-
-// 現在注目しているトークン
-extern Token *token;
-
-// ローカル変数
-extern LVar *locals;
-
-// 入力プログラム
-extern char *user_input;
-
-// ループの数
-extern int lnum;
-
-// 複数の関数
-extern Function *fns[100];
-
-// スコープ
-extern Scope *scope;
 
 #endif

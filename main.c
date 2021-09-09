@@ -1,45 +1,12 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
 #include "9cc.h"
 
-// 現在注目しているトークン
 Token *token;
-
-// ローカル変数
 LVar *locals;
-
-// 入力プログラム
 char *user_input;
-
-// ループの数
 int lnum = 0;
-
-// 複数の関数
 Function *fns[100];
-
-// スコープ
 Scope *scope;
-
-// エラーを報告するための関数
-// printfと同じ引数を取る
-void error(char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  vfprintf(stderr, fmt, ap);
-  fprintf(stderr, "\n");
-  exit(1);
-}
-
-char* duplicate(char *str, size_t len) {
-
-    char *buffer = malloc(len + 1);
-    memcpy(buffer, str, len);
-    buffer[len] = '\0';
-
-    return buffer;
-}
 
 int main(int argc, char **argv)
 {
