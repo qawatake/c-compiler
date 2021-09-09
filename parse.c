@@ -690,6 +690,8 @@ Node *primary()
 
     node->offset = lvar->offset;
     node->type = lvar->type;
+    node->name = tok->str;
+    node->len = tok->len;
     return node;
   }
 

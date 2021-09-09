@@ -159,8 +159,14 @@ void error_at(char *loc, char *fmt, ...);
 // コピー文字列を生成し, 先頭へのポインタを返す
 char *duplicate(char *str, size_t len);
 
+// ポインタの先から指定した文字列分表示
+void strprint(char *str, size_t len);
+
 // スコープの深さを返す
 int scpdepth(Scope *scp);
+
+// 構文木を表示する
+void syntax_tree(int depth, Node *node);
 
 /* token.c
   トークナイザの実装
