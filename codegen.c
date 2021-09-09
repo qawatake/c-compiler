@@ -35,6 +35,9 @@ void gen_lval(Node *node)
 
 void align()
 {
+  printf("  push r10\n");
+  printf("  push r11\n");
+  printf("  push r12\n");
   printf("  mov r10, rax\n"); // rax を r10 に退避
   printf("  mov r11, rdx\n"); // rds を r11 に退避
 
@@ -53,6 +56,9 @@ void align()
 void dealign()
 {
   printf("  add rsp, r12\n"); // シフトした分を戻す
+  printf("  pop r12\n");
+  printf("  pop r11\n");
+  printf("  pop r10\n");
 }
 
 void gen_call(Node *node)
