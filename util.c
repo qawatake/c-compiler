@@ -155,10 +155,51 @@ void syntax_tree(int depth, Node *node)
   if (node->kind == ND_NUM)
     printf("%d", node->val);
 
+  if (node->kind == ND_LVAR || node->kind == ND_CALL)
+  {
+    printf(" ");
+    if (node->type != NULL)
+      type_tree(node->type);
+  }
   printf("\n");
 
   if (node->lhs)
     syntax_tree(depth + 1, node->lhs);
   if (node->rhs)
     syntax_tree(depth + 1, node->rhs);
+}
+
+void type_tree(Type *ty)
+{
+  if (ty == NULL)
+    return;
+
+  char *tkind;
+  switch (ty->kind)
+  {
+  case TY_INT_LITERAL:
+    tkind = "TY_INT_LITERAL";
+    break;
+  case TY_INT:
+    tkind = "TY_INT";
+    break;
+  case TY_PTR:
+    tkind = "TY_PTR";
+    break;
+  case TY_ARRAY:
+    tkind = "TY_ARRAY";
+    break;
+  default:
+    error("デバッグ: '%d' は登録されていない TypeKind です", ty->kind);
+  }
+
+  if (ty->ptr_to)
+  {
+    printf("%s ->", tkind);
+    type_tree(ty->ptr_to);
+  }
+  else
+  {
+    printf("%s", tkind);
+  }
 }

@@ -288,50 +288,12 @@ Function *function()
 
 void var_assertion(Type *btype)
 {
-  Type *cur = btype;
-  while (consume("*"))
-  {
-    Type *newty = calloc(1, sizeof(Type));
-    newty->kind = TY_PTR;
-    newty->ptr_to = cur;
-    cur = newty;
-  }
-
-  Token *tok = consume_ident();
-  if (!tok)
-  {
-    error("変数名がありません");
-  }
-
-  LVar *lvar = find_lvar(scope, tok);
-  if (lvar)
-  {
-    error("すでに宣言された変数です");
-  }
-
-  lvar = calloc(1, sizeof(LVar));
+  LVar *lvar = calloc(1, sizeof(LVar));
   lvar->next = scope->locals;
-  lvar->name = tok->str;
-  lvar->len = tok->len;
-
-  if (consume("["))
-  {
-    Type *newty = calloc(1, sizeof(Type));
-    newty->kind = TY_ARRAY;
-    newty->ptr_to = cur;
-    newty->array_size = expect_number();
-    cur = newty;
-    expect("]");
-    lvar->type = cur;
-    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type): scope->offset + size(lvar->type);
-    scope->locals = lvar;
-  }
-  else
-  {
-    lvar->type = cur;
-    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
-    scope->locals = lvar;
-  }
+  assr(btype, lvar); // name, len, offset, type を変更
+  lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
+  scope->locals = lvar;
+  return;
 }
 
 Node *stmt()

@@ -168,6 +168,9 @@ int scpdepth(Scope *scp);
 // 構文木を表示する
 void syntax_tree(int depth, Node *node);
 
+// タイプの派生をたどる
+void type_tree(Type *ty);
+
 /* token.c
   トークナイザの実装
 */
@@ -203,7 +206,14 @@ bool is_alnum(char c);
 Token *tokenize(char *p);
 
 
+/* typeprs.c
+  型宣言を解析
+*/
 
+// 型宣言を解析
+// root: 変数宣言の冒頭の型
+// lvar: 変数宣言を解析した結果 (name, len, type) を埋め込む
+void *assr(Type *root, LVar *lvar);
 
 /* parse.c
   構文木を生成

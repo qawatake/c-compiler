@@ -80,5 +80,9 @@ assert 2 "int main(){int *y; int x; y = &x; x = 2; y[0];}"
 assert 1 "int main(){int a; a = 1; {int a; a = 100;} return a;}"
 assert 2 "int main(){int a; a = 1; {int b; b = 1; a = a + b;} return a;}"
 assert 13 "int main(){int a[3]; a[0] = 13; return **&a;}"
+assert 24 "int main(){int a[2][3]; return sizeof(a);}"
+assert 8 "int main(){int (*a)[3]; return sizeof a;}"
+assert 4 "int main(){int x[3]; int (*y)[3]; y = &x; x[0] = 4; return **y;}"
+assert 24 "int main(){int *(*x[3])[4]; return sizeof x;}"
 
 echo OK
