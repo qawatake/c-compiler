@@ -225,7 +225,7 @@ void gen(Node *node)
       printf("  je .Lend%x\n", lnum);
       gen(node->rhs);
       printf(".Lend%x:\n", lnum);
-      printf("  push 0;"); // スタックに1つ残すため
+      printf("  push rax\n"); // スタックに1つ残すため
       lnum++;
     }
     return;
