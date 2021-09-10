@@ -323,7 +323,7 @@ void var_assertion(Type *btype)
     cur = newty;
     expect("]");
     lvar->type = cur;
-    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) + 8 : scope->offset + size(lvar->type) + 8;
+    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type): scope->offset + size(lvar->type);
     scope->locals = lvar;
   }
   else

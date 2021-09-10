@@ -276,7 +276,6 @@ void align();
 void dealign();
 
 // 配列をポインタとして使うためのコード生成
-void gen_array(Node *node);
 void gen_lval(Node *node);
 void gen_call(Node *node);
 void gen_func(Function *fn);

@@ -1,26 +1,11 @@
 #include <stdio.h>
 #include "9cc.h"
 
-void gen_array(Node *node)
-{
-  printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->offset - size(node->type)); // 配列内部のポインタのアドレス
-  printf("  mov rdi, rbp\n");
-  printf("  sub rdi, %d\n", node->offset); // 配列の第0要素のアドレス
-  printf("  mov [rax], rdi\n");
-  printf("  push rax\n");
-}
-
 void gen_lval(Node *node)
 {
   switch (node->kind)
   {
   case ND_LVAR:
-    if (node->type->kind == TY_ARRAY)
-    {
-      gen_array(node);
-      return;
-    }
     printf("  mov rax, rbp\n");
     printf("  sub rax, %d\n", node->offset);
     printf("  push rax\n");
@@ -159,18 +144,20 @@ void gen(Node *node)
     return;
   case ND_LVAR:
     gen_lval(node);
-    printf("  pop rax\n");
+    if (node->type->kind == TY_ARRAY)
+      return;
 
-    switch (size(node->type))
+    printf("  pop rax\n");
+    switch (node->type->kind)
     {
-      case SIZE_INT:
-        printf("  mov eax, [rax]\n");
+    case TY_INT_LITERAL:
+    case TY_INT:
+      printf("  mov eax, [rax]\n");
       break;
-      case SIZE_PTR:
-        printf("  mov rax, [rax]\n");
+    case TY_PTR:
+      printf("  mov rax, [rax]\n");
       break;
     }
-
     printf("  push rax\n");
     return;
   case ND_ADDR:
@@ -179,14 +166,16 @@ void gen(Node *node)
   case ND_DEREF:
     gen(node->lhs);
     printf("  pop rax\n");
-
-    switch (size(node->type))
+    switch (node->type->kind)
     {
-      case SIZE_INT:
-        printf("  mov eax, [rax]\n");
+    case TY_INT_LITERAL:
+    case TY_INT:
+      printf("  mov eax, [rax]\n");
       break;
-      case SIZE_PTR:
-        printf("  mov rax, [rax]\n");
+    case TY_PTR:
+      printf("  mov rax, [rax]\n");
+      break;
+    case TY_ARRAY: // 配列へのポインタ
       break;
     }
 
@@ -202,13 +191,14 @@ void gen(Node *node)
     printf("  pop rdi\n");
     printf("  pop rax\n");
 
-    switch (size(node->type))
+    switch (node->type->kind)
     {
-      case SIZE_INT:
-        printf("  mov [rax], edi\n");
+    case TY_INT_LITERAL:
+    case TY_INT:
+      printf("  mov [rax], edi\n");
       break;
-      case SIZE_PTR:
-        printf("  mov [rax], rdi\n");
+    case TY_PTR:
+      printf("  mov [rax], rdi\n");
       break;
     }
 
