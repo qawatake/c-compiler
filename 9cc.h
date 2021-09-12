@@ -110,12 +110,12 @@ struct Node
 typedef struct Function Function;
 struct Function
 {
+  Function *next; // 登録済みの次の関数
   char *name;
   Node *body;
   Type *retype; // 返り値の型
-  int offset; // ローカル変数のデータ保持のために必要なメモリ数
+  int offset;   // ローカル変数のデータ保持のために必要なメモリ数
 };
-
 
 typedef struct Scope Scope;
 struct Scope
@@ -139,13 +139,11 @@ extern char *user_input;
 // ループの数
 extern int lnum;
 
-// 複数の関数
-extern Function *fns[100];
-
 // スコープ
 extern Scope *scope;
 
-
+// 関数の連結リスト
+extern Function *funcs;
 
 /* util.c */
 
@@ -204,7 +202,6 @@ bool is_alnum(char c);
 
 // 入力文字列 p をトークナイズしてそれを返す
 Token *tokenize(char *p);
-
 
 /* typeprs.c
   型宣言を解析
@@ -271,8 +268,6 @@ Node *unary();
 Node *parse_func_args();
 Node *comp();
 Node *primary();
-
-
 
 /* codegen.c
   構文木に沿って, コード生成

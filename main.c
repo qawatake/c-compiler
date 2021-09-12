@@ -6,8 +6,8 @@ Token *token;
 LVar *locals;
 char *user_input;
 int lnum = 0;
-Function *fns[100];
 Scope *scope;
+Function *funcs;
 
 int main(int argc, char **argv)
 {
@@ -32,10 +32,11 @@ int main(int argc, char **argv)
 
   // アセンブリの前半部分を出力
   printf(".intel_syntax noprefix\n");
-  for (int i = 0; fns[i]; i++)
+  Function *cur = funcs; // funcs は連結リストで実装されたスタックなので, 後で登録された関数が先にコード生成される
+  while (cur)
   {
-    // gen(code[i]);
-    gen_func(fns[i]);
+    gen_func(cur);
+    cur = cur->next;
   }
 
   return 0;

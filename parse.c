@@ -192,15 +192,14 @@ Node *parse_for_contents()
 
 void program()
 {
-  int i = 0;
-  fns[0] = NULL;
+  funcs = NULL;
+
   while (!at_eof())
   {
-    fns[i] = function();
-    fns[i]->offset = scope->offset;
-    i++;
+    Function *newfn = function();
+    newfn->next = funcs;
+    funcs = newfn;
   }
-  fns[i] = NULL;
 }
 
 Function *function()
@@ -283,6 +282,7 @@ Function *function()
   }
   cur->rhs = new_node(ND_NONE, NULL, NULL);
   zoom_out();
+  fn->offset = scope->offset;
   return fn;
 }
 
@@ -578,12 +578,12 @@ Node *parse_func_args()
 
 Function *find_func(Token *tok)
 {
-  for (int i = 0; fns[i]; i++)
+  Function *cur = funcs;
+  while (cur)
   {
-    if (strlen(fns[i]->name) == tok->len && !memcmp(tok->str, fns[i]->name, tok->len))
-    {
-      return fns[i];
-    }
+    if (strlen(cur->name) == tok->len && !memcmp(tok->str, cur->name, tok->len))
+      return cur;
+    cur = cur->next;
   }
   return NULL;
 }
