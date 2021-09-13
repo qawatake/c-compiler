@@ -53,6 +53,15 @@ struct Type
   size_t array_size; // 配列の要素数
 };
 
+// 変数の共通要素
+typedef struct Var Var;
+struct Var
+{
+  char *name; // 変数名
+  int len;    // 変数名の長さ
+  Type *type; // 変数の型
+};
+
 // ローカル変数
 typedef struct LVar LVar;
 struct LVar
@@ -61,6 +70,16 @@ struct LVar
   char *name; // 変数の名前
   int len;    // 変数の長さ
   int offset; // ベースポインタ (RBP) からのオフセット
+  Type *type; // 変数の型
+};
+
+// グローバル変数
+typedef struct GVar GVar;
+struct GVar
+{
+  GVar *next; // 次の変数か NULL
+  char *name; // 変数名
+  int len;    // 変数名の長さ
   Type *type; // 変数の型
 };
 
@@ -89,6 +108,7 @@ typedef enum
   ND_DEREF,     // *x
   ND_FUNC,      // 関数定義
   ND_LVAR,      // ローカル変数
+  ND_GVAR,      // グローバル変数
   ND_NUM,       // 整数
 } NodeKind;
 
@@ -130,9 +150,6 @@ struct Scope
 // 現在注目しているトークン
 extern Token *token;
 
-// ローカル変数
-extern LVar *locals;
-
 // 入力プログラム
 extern char *user_input;
 
@@ -144,6 +161,9 @@ extern Scope *scope;
 
 // 関数の連結リスト
 extern Function *funcs;
+
+// グローバル変数
+extern GVar *globals;
 
 /* util.c */
 
@@ -209,8 +229,9 @@ Token *tokenize(char *p);
 
 // 型宣言を解析
 // root: 変数宣言の冒頭の型
-// lvar: 変数宣言を解析した結果 (name, len, type) を埋め込む
-void *assr(Type *root, LVar *lvar);
+// var: 変数宣言を解析した結果 (name, len, type) を埋め込む
+// 型の解析に成功したら, true を返す
+bool assr(Var *var);
 
 /* parse.c
   構文木を生成
@@ -231,13 +252,13 @@ Type *tyjoin(Type *lty, Type *rty);
 // sizeof に相当する役割
 Size size(Type *ty);
 
-// 現在のスコープに限定して, 変数を名前で検索する
+// ローカル変数を変数名で検索する
 // 見つからなかった場合は NULL を返す
-LVar *find_lvar(Scope *scp, Token *tok);
+LVar *find_lvar(Token *tok);
 
-// 変数を名前で検索する
+// グローバル変数を変数名検索する
 // 見つからなかった場合はNULLを返す
-LVar *find_gvar(Token *tok);
+GVar *find_gvar(Token *tok);
 
 // 関数を名前で検索する
 // 見つからなかった場合はNULLを返す
@@ -248,15 +269,10 @@ void zoom_in();
 // 現在のスコープを抜ける
 void zoom_out();
 
-// 変数宣言を解析する
-// 型派生の最下流 (変数宣言の冒頭の型)を与えると, 変数を登録する
-void var_assertion(Type *btype);
-
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 Node *parse_for_contents();
 void program();
-Function *function();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -283,7 +299,8 @@ void dealign();
 // 配列をポインタとして使うためのコード生成
 void gen_lval(Node *node);
 void gen_call(Node *node);
+void gen_x86();
+void gen_gvar();
 void gen_func(Function *fn);
 void gen(Node *node);
-
 #endif

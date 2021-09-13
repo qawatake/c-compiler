@@ -77,31 +77,35 @@ Size size(Type *ty)
   }
 }
 
-LVar *find_lvar(Scope *scp, Token *tok)
-{
-  for (LVar *var = scp->locals; var; var = var->next)
-  {
-    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
-    {
-      return var;
-    }
-  }
-
-  return NULL;
-}
-
-LVar *find_gvar(Token *tok)
+LVar *find_lvar(Token *tok)
 {
   Scope *cur = scope;
 
   while (cur)
   {
-    LVar *lvar = find_lvar(cur, tok);
-
-    if (lvar)
-      return lvar;
-
+    LVar *var = cur->locals;
+    while (var)
+    {
+      if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+      {
+        return var;
+      }
+      var = var->next;
+    }
     cur = cur->parent;
+  }
+  return NULL;
+}
+
+GVar *find_gvar(Token *tok)
+{
+
+  GVar *var = globals;
+  while (var)
+  {
+    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+      return var;
+    var = var->next;
   }
   return NULL;
 }
@@ -151,6 +155,24 @@ Node *new_node_num(int val)
   return node;
 }
 
+LVar *newLVar(Var *var)
+{
+  LVar *lvar = calloc(1, sizeof(LVar));
+  lvar->name = var->name;
+  lvar->len = var->len;
+  lvar->type = var->type;
+  return lvar;
+}
+
+GVar *newGVar(Var *var)
+{
+  GVar *gvar = calloc(1, sizeof(GVar));
+  gvar->name = var->name;
+  gvar->len = var->len;
+  gvar->type = var->type;
+  return gvar;
+}
+
 Node *parse_for_contents()
 {
   Node *node = calloc(1, sizeof(Node));
@@ -193,112 +215,75 @@ Node *parse_for_contents()
 void program()
 {
   funcs = NULL;
+  globals = NULL;
 
   while (!at_eof())
   {
-    Function *newfn = function();
-    newfn->next = funcs;
-    funcs = newfn;
-  }
-}
-
-Function *function()
-{
-  if (!consume("int"))
-  {
-    error("関数宣言の冒頭に型名がありません");
-  }
-
-  Type *rety = calloc(1, sizeof(Type));
-  rety->kind = TY_INT;
-  rety->ptr_to = NULL;
-  // 返り値の型をパースする
-  while (consume("*"))
-  {
-    Type *newty = calloc(1, sizeof(Type));
-    newty->kind = TY_PTR;
-    newty->ptr_to = rety;
-    rety = newty;
-  }
-
-  Token *tok = consume_ident();
-  if (!tok)
-  {
-    error("関数名ではありません");
-  }
-  Function *fn = calloc(1, sizeof(Function));
-  fn->name = duplicate(tok->str, tok->len);
-  fn->retype = rety;
-  zoom_in();
-
-  expect("(");
-  if (!consume(")"))
-  {
-    for (;;)
+    Var var;
+    assr(&var);
+    if (consume("("))
     {
-      if (!consume("int"))
-        error("関数の引数の冒頭に型名がありません");
+      Type *rety = var.type;
+      Function *fn = calloc(1, sizeof(Function));
+      fn->name = duplicate(var.name, var.len);
+      fn->retype = rety;
+      zoom_in();
 
-      Type *ty = calloc(1, sizeof(Type));
-      ty->kind = TY_INT;
-      ty->ptr_to = NULL;
-      while (consume("*"))
+      if (!consume(")"))
       {
-        Type *newty = calloc(1, sizeof(Type));
-        newty->kind = TY_PTR;
-        newty->ptr_to = ty;
-        ty = newty;
+        for (;;)
+        {
+          Var var;
+          assr(&var);
+          LVar *lvar = newLVar(&var);
+          lvar->next = scope->locals;
+          lvar->offset = (scope->locals) ? scope->locals->offset + 8 : scope->offset + 8;
+          scope->locals = lvar;
+          if (consume(","))
+            continue;
+          expect(")");
+          break;
+        }
       }
+      expect("{");
 
-      Token *tok = consume_ident();
-      LVar *lvar = calloc(1, sizeof(LVar));
-      lvar->next = scope->locals;
-      lvar->name = tok->str;
-      lvar->len = tok->len;
-      lvar->type = ty;
-      lvar->offset = (scope->locals) ? scope->locals->offset + 8 : scope->offset + 8;
-      scope->locals = lvar;
-      if (consume(","))
+      if (consume("}"))
+      {
+        fn->body = new_node(ND_NONE, NULL, NULL);
+        zoom_out();
+        fn->offset = scope->offset;
+        fn->next = funcs;
+        funcs = fn;
         continue;
-      expect(")");
-      break;
+      }
+      fn->body = new_node(ND_COMP_STMT, stmt(), NULL);
+
+      Node *cur = fn->body;
+      while (!consume("}"))
+      {
+        cur->rhs = new_node(ND_COMP_STMT, stmt(), NULL);
+        cur = cur->rhs;
+      }
+      cur->rhs = new_node(ND_NONE, NULL, NULL);
+      zoom_out();
+      fn->offset = scope->offset;
+      fn->next = funcs;
+      funcs = fn;
+    }
+    else
+    {
+      expect(";");
+      GVar *gvar = newGVar(&var);
+      gvar->next = globals;
+      globals = gvar;
     }
   }
-  expect("{");
-
-  if (consume("}"))
-  {
-    fn->body = new_node(ND_NONE, NULL, NULL);
-    zoom_out();
-    return fn;
-  }
-  fn->body = new_node(ND_COMP_STMT, stmt(), NULL);
-
-  Node *cur = fn->body;
-  while (!consume("}"))
-  {
-    cur->rhs = new_node(ND_COMP_STMT, stmt(), NULL);
-    cur = cur->rhs;
-  }
-  cur->rhs = new_node(ND_NONE, NULL, NULL);
-  zoom_out();
-  fn->offset = scope->offset;
-  return fn;
-}
-
-void var_assertion(Type *btype)
-{
-  LVar *lvar = calloc(1, sizeof(LVar));
-  lvar->next = scope->locals;
-  assr(btype, lvar); // name, len, offset, type を変更
-  lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
-  scope->locals = lvar;
-  return;
 }
 
 Node *stmt()
 {
   Node *node;
+  Var var;
   if (consume("{")) // ブロック文
   {
     zoom_in();
@@ -320,17 +305,15 @@ Node *stmt()
     node->lhs = expr();
     expect(";");
   }
-  else if (consume("int"))
+  else if (assr(&var))
   {
     node = calloc(1, sizeof(Node));
     node->kind = ND_NONE;
 
-    Type *ty = calloc(1, sizeof(Type));
-    ty->kind = TY_INT;
-    ty->ptr_to = NULL;
-
-    var_assertion(ty);
-
+    LVar *lvar = newLVar(&var);
+    lvar->next = scope->locals;
+    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
+    scope->locals = lvar;
     expect(";");
   }
   else if (consume("if"))
@@ -643,18 +626,29 @@ Node *primary()
       return node;
     }
 
-    node->kind = ND_LVAR;
-    LVar *lvar = find_gvar(tok);
-    if (!lvar)
+    LVar *lvar = find_lvar(tok);
+    GVar *gvar = find_gvar(tok);
+    if (lvar)
+    {
+      node->kind = ND_LVAR;
+      node->offset = lvar->offset;
+      node->type = lvar->type;
+      node->name = tok->str;
+      node->len = tok->len;
+      return node;
+    }
+    else if (gvar)
+    {
+      node->kind = ND_GVAR;
+      node->type = gvar->type;
+      node->name = gvar->name;
+      node->len = gvar->len;
+      return node;
+    }
+    else
     {
       error("宣言されていない変数です");
     }
-
-    node->offset = lvar->offset;
-    node->type = lvar->type;
-    node->name = tok->str;
-    node->len = tok->len;
-    return node;
   }
 
   // そうでなければ数値のはず

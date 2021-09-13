@@ -132,11 +132,14 @@ void syntax_tree(int depth, Node *node)
   case ND_LVAR:
     ndkind = "LVAR";
     break;
+  case ND_GVAR:
+    ndkind = "GVAR";
+    break;
   case ND_NUM:
     ndkind = "NUM";
     break;
   default:
-    error("デバッグ: '%d' は登録されていない NodeKInd です", node->kind);
+    error("デバッグ: '%d' は登録されていない NodeKind です", node->kind);
   }
 
   for (int i = 0; i < depth; i++)
@@ -145,13 +148,8 @@ void syntax_tree(int depth, Node *node)
   }
 
   printf("|- %s: ", ndkind);
-  if (node->kind == ND_LVAR || node->kind == ND_CALL)
-  {
-    for (int i = 0; i < node->len; i++)
-    {
-      printf("%c", node->name[i]);
-    }
-  }
+  if (node->kind == ND_LVAR || node->kind == ND_GVAR || node->kind == ND_CALL)
+    strprint(node->name, node->len);
   if (node->kind == ND_NUM)
     printf("%d", node->val);
 

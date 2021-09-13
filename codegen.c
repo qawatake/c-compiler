@@ -10,6 +10,12 @@ void gen_lval(Node *node)
     printf("  sub rax, %d\n", node->offset);
     printf("  push rax\n");
     break;
+  case ND_GVAR:
+    printf("  lea rax, ");
+    strprint(node->name, node->len);
+    printf("[rip]\n");
+    printf("  push rax\n");
+    break;
   case ND_DEREF:
     gen(node->lhs);
     break;
@@ -81,6 +87,32 @@ void gen_call(Node *node)
   printf("  push rax\n");
 }
 
+void gen_gvar()
+{
+  GVar *var = globals;
+  printf(".data\n");
+  while (var)
+  {
+    strprint(var->name, var->len);
+    printf(":\n");
+    printf("  .zero %d\n", size(var->type));
+    var = var->next;
+  }
+}
+
+void gen_x86()
+{
+  printf(".intel_syntax noprefix\n");
+  gen_gvar();
+  Function *cur = funcs; // funcs は連結リストで実装されたスタックなので, 後で登録された関数が先にコード生成される
+  printf(".text\n");
+  while (cur)
+  {
+    gen_func(cur);
+    cur = cur->next;
+  }
+}
+
 void gen_func(Function *fn)
 {
   printf(".globl %s\n", fn->name);
@@ -142,6 +174,7 @@ void gen(Node *node)
   case ND_NUM:
     printf("  push %d\n", node->val);
     return;
+  case ND_GVAR:
   case ND_LVAR:
     gen_lval(node);
     if (node->type->kind == TY_ARRAY)

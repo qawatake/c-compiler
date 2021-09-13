@@ -1,19 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "9cc.h"
 
-static Type *derv(LVar *lvar);
-static Type *ptr(LVar *lvar);
-static Type *seq(LVar *lvar);
-static Type *ident(LVar *lvar);
+static Type *derv(Var *var);
+static Type *ptr(Var *var);
+static Type *seq(Var *var);
+static Type *ident(Var *var);
 static Type *root();
 
-void *assr(Type *root, LVar *lvar)
+bool assr(Var *var)
 {
-  Type *ty = derv(lvar);
+  Type *btype = root();
+  if (!btype)
+    return false;
+  Type *ty = derv(var);
   if (ty == NULL)
   {
-    ty = root;
+    ty = btype;
   }
   else
   {
@@ -22,18 +26,19 @@ void *assr(Type *root, LVar *lvar)
     {
       head = head->ptr_to;
     }
-    head->ptr_to = root;
+    head->ptr_to = btype;
   }
 
-  lvar->type = ty;
+  var->type = ty;
+  return true;
 }
 
-Type *derv(LVar *lvar)
+Type *derv(Var *var)
 {
-  return ptr(lvar);
+  return ptr(var);
 }
 
-Type *ptr(LVar *lvar)
+Type *ptr(Var *var)
 {
   Type *parent = NULL;
   while (consume("*"))
@@ -44,7 +49,7 @@ Type *ptr(LVar *lvar)
     parent = newty;
   }
 
-  Type *ty = seq(lvar);
+  Type *ty = seq(var);
   if (ty == NULL)
   {
     ty = parent;
@@ -61,9 +66,9 @@ Type *ptr(LVar *lvar)
   return ty;
 }
 
-Type *seq(LVar *lvar)
+Type *seq(Var *var)
 {
-  Type *ty = ident(lvar);
+  Type *ty = ident(var);
   Type *head = ty;
   if (head)
   {
@@ -93,24 +98,33 @@ Type *seq(LVar *lvar)
   return ty;
 }
 
-Type *ident(LVar *lvar)
+Type *ident(Var *var)
 {
   if (consume("("))
   {
-    Type *ty = derv(lvar);
+    Type *ty = derv(var);
     expect(")");
     return ty;
   }
-
   Token *tok = consume_ident();
   if (tok)
   {
-    if (find_lvar(scope, tok))
-      error("すでに宣言された変数です");
-    lvar->name = tok->str;
-    lvar->len = tok->len;
+    var->name = tok->str;
+    var->len = tok->len;
     return NULL;
   }
 
   error("変数宣言が失敗しました");
+}
+
+Type *root()
+{
+  Type *ty = NULL;
+  if (consume("int"))
+  {
+    ty = calloc(1, sizeof(Type));
+    ty->kind = TY_INT;
+    ty->ptr_to = NULL;
+  }
+  return ty;
 }

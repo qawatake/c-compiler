@@ -3,11 +3,11 @@
 #include "9cc.h"
 
 Token *token;
-LVar *locals;
 char *user_input;
 int lnum = 0;
 Scope *scope;
 Function *funcs;
+GVar *globals;
 
 int main(int argc, char **argv)
 {
@@ -30,14 +30,8 @@ int main(int argc, char **argv)
   // パース
   program();
 
-  // アセンブリの前半部分を出力
-  printf(".intel_syntax noprefix\n");
-  Function *cur = funcs; // funcs は連結リストで実装されたスタックなので, 後で登録された関数が先にコード生成される
-  while (cur)
-  {
-    gen_func(cur);
-    cur = cur->next;
-  }
+  // コード生成
+  gen_x86();
 
   return 0;
 }
