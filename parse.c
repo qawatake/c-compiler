@@ -14,8 +14,15 @@ int tycmp(Type *lty, Type *rty)
 
   switch (lty->kind)
   {
-  case TY_INT:
+  case TY_CHAR:
     if (rty->kind == TY_INT_LITERAL)
+      return -1;
+    if (rty->kind == TY_CHAR)
+      return 0;
+    if (rty->kind == TY_INT || rty->kind == TY_ARRAY || rty->kind == TY_PTR)
+      return 1;
+  case TY_INT:
+    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_CHAR)
       return -1;
     if (rty->kind == TY_INT)
       return 0;
@@ -25,18 +32,18 @@ int tycmp(Type *lty, Type *rty)
   case TY_INT_LITERAL:
     if (rty->kind == TY_INT_LITERAL)
       return 0;
-    if (rty->kind == TY_INT || rty->kind == TY_PTR || rty->kind == TY_ARRAY)
+    if (rty->kind == TY_CHAR || rty->kind == TY_INT || rty->kind == TY_PTR || rty->kind == TY_ARRAY)
       return 1;
     error("両辺の型が不整合です");
   case TY_ARRAY:
-    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_INT)
+    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_CHAR || rty->kind == TY_INT)
       return -1;
     if (rty->kind == TY_ARRAY)
       return 0;
     if (rty->kind == TY_PTR)
       return 1;
   case TY_PTR:
-    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_INT || rty->kind == TY_ARRAY)
+    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_CHAR || rty->kind == TY_INT || rty->kind == TY_ARRAY)
       return -1;
     if (rty->kind == TY_PTR)
     {
@@ -68,6 +75,8 @@ Size size(Type *ty)
     return SIZE_INT;
   case TY_INT:
     return SIZE_INT;
+  case TY_CHAR:
+    return SIZE_CHAR;
   case TY_PTR:
     return SIZE_PTR;
   case TY_ARRAY:

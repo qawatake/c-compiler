@@ -6,7 +6,7 @@
 
 bool consume(char *op)
 {
-  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR && token->kind != TK_INT && token->kind != TK_SIZEOF)
+  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR && token->kind != TK_INT && token->kind != TK_SIZEOF && token->kind != TK_CHAR)
     return false;
   else if (token->len != strlen(op) || memcmp(token->str, op, token->len))
     return false;
@@ -146,6 +146,13 @@ Token *tokenize(char *p)
     {
       cur = new_token(TK_INT, cur, p, 3);
       p += 3;
+      continue;
+    }
+
+    if (strncmp(p, "char", 4) == 0 && !is_alnum(p[4]))
+    {
+      cur = new_token(TK_CHAR, cur, p, 4);
+      p += 4;
       continue;
     }
 

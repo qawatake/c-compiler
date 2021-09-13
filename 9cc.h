@@ -14,6 +14,7 @@ typedef enum
   TK_WHILE,    // while
   TK_FOR,      // for
   TK_INT,      // int
+  TK_CHAR,     // char
   TK_SIZEOF,   // sizeof
   TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
@@ -34,6 +35,7 @@ struct Token
 // 変数のサイズ
 typedef enum
 {
+  SIZE_CHAR = 1,
   SIZE_INT = 4,
   SIZE_PTR = 8,
 } Size;
@@ -46,6 +48,7 @@ struct Type
   {
     TY_INT_LITERAL,  // 整数リテラル
     TY_INT,          // int
+    TY_CHAR,         // char
     TY_PTR,          // ポインタ
     TY_ARRAY,        // 配列
   } kind;            // int or pointer

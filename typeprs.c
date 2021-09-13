@@ -125,6 +125,11 @@ Type *root()
     ty = calloc(1, sizeof(Type));
     ty->kind = TY_INT;
     ty->ptr_to = NULL;
+  } else if (consume("char"))
+  {
+    ty = calloc(1, sizeof(Type));
+    ty->kind = TY_CHAR;
+    ty->ptr_to = NULL;
   }
   return ty;
 }

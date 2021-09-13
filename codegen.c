@@ -183,6 +183,9 @@ void gen(Node *node)
     printf("  pop rax\n");
     switch (node->type->kind)
     {
+    case TY_CHAR:
+      printf("  movsx eax, byte ptr [rax]\n");
+      break;
     case TY_INT_LITERAL:
     case TY_INT:
       printf("  mov eax, [rax]\n");
@@ -201,6 +204,9 @@ void gen(Node *node)
     printf("  pop rax\n");
     switch (node->type->kind)
     {
+    case TY_CHAR:
+      printf("  movsx eax, byte ptr [rax]\n");
+      break;
     case TY_INT_LITERAL:
     case TY_INT:
       printf("  mov eax, [rax]\n");
@@ -226,6 +232,9 @@ void gen(Node *node)
 
     switch (node->type->kind)
     {
+    case TY_CHAR:
+      printf("  mov [rax], dil\n");
+      break;
     case TY_INT_LITERAL:
     case TY_INT:
       printf("  mov [rax], edi\n");
