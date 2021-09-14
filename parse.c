@@ -176,6 +176,45 @@ Node *new_node_num(int val)
   return node;
 }
 
+Node *new_node_lvar(LVar *lvar)
+{
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_LVAR;
+  node->name = lvar->name;
+  node->len = lvar->len;
+  node->offset = lvar->offset;
+  node->type = lvar->type;
+  return node;
+}
+
+Node *new_node_gvar(GVar *gvar)
+{
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_GVAR;
+  node->type = gvar->type;
+  node->name = gvar->name;
+  node->len = gvar->len;
+  return node;
+}
+
+Node *new_node_str(String *str)
+{
+  Node *node = calloc(1, sizeof(String));
+  Type *btype = calloc(1, sizeof(Type));
+  Type *ty = calloc(1, sizeof(Type));
+
+  btype->kind = TY_CHAR;
+  btype->ptr_to = NULL;
+  ty->kind = TY_ARRAY;
+  ty->ptr_to = btype;
+  ty->array_size = str->len - 2;
+
+  node->kind = ND_STR;
+  node->type = ty;
+  node->serial = str->serial;
+  return node;
+}
+
 LVar *newLVar(Var *var)
 {
   LVar *lvar = calloc(1, sizeof(LVar));
@@ -266,26 +305,10 @@ void program()
           break;
         }
       }
-      expect("{");
+      if (!check("{"))
+        expect("{");
 
-      if (consume("}"))
-      {
-        fn->body = new_node(ND_NONE, NULL, NULL);
-        zoom_out();
-        fn->offset = scope->offset;
-        fn->next = funcs;
-        funcs = fn;
-        continue;
-      }
-      fn->body = new_node(ND_COMP_STMT, stmt(), NULL);
-
-      Node *cur = fn->body;
-      while (!consume("}"))
-      {
-        cur->rhs = new_node(ND_COMP_STMT, stmt(), NULL);
-        cur = cur->rhs;
-      }
-      cur->rhs = new_node(ND_NONE, NULL, NULL);
+      fn->body = stmt();
       zoom_out();
       fn->offset = scope->offset;
       fn->next = funcs;
@@ -328,13 +351,25 @@ Node *stmt()
   }
   else if (assr(&var))
   {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_NONE;
-
     LVar *lvar = newLVar(&var);
     lvar->next = scope->locals;
     lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
     scope->locals = lvar;
+
+    if (consume("="))
+    {
+      node = new_node_lvar(lvar);
+
+      Node *rhs = equality();
+      Type *ty = tyjoin(node->type, rhs->type);
+      node = new_node(ND_ASSIGN, node, rhs);
+      node->type = ty;
+    }
+    else
+    {
+      node = calloc(1, sizeof(Node));
+      node->kind = ND_NONE;
+    }
     expect(";");
   }
   else if (consume("if"))
@@ -628,9 +663,9 @@ Node *primary()
   Token *tok = consume_ident();
   if (tok)
   {
-    Node *node = calloc(1, sizeof(Node));
     if (consume("("))
     {
+      Node *node = calloc(1, sizeof(Node));
       Function *fn = find_func(tok);
       if (fn)
       {
@@ -650,44 +685,17 @@ Node *primary()
     LVar *lvar = find_lvar(tok);
     GVar *gvar = find_gvar(tok);
     if (lvar)
-    {
-      node->kind = ND_LVAR;
-      node->offset = lvar->offset;
-      node->type = lvar->type;
-      node->name = tok->str;
-      node->len = tok->len;
-      return node;
-    }
+      return new_node_lvar(lvar);
     else if (gvar)
-    {
-      node->kind = ND_GVAR;
-      node->type = gvar->type;
-      node->name = gvar->name;
-      node->len = gvar->len;
-      return node;
-    }
+      return new_node_gvar(gvar);
     else
-    {
       error("宣言されていない変数です");
-    }
   }
 
   String *str = consume_str();
   if (str)
   {
-    Type *btype = calloc(1, sizeof(Type));
-    btype->kind = TY_CHAR;
-    btype->ptr_to = NULL;
-    Type *ty = calloc(1, sizeof(Type));
-    ty->kind = TY_ARRAY;
-    ty->ptr_to = btype;
-    ty->array_size = str->len - 2;
-
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_STR;
-    node->type = ty;
-    node->serial = str->serial;
-
+    Node *node = new_node_str(str);
     str->next = strings;
     strings = str;
     return node;

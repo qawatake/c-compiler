@@ -41,6 +41,13 @@ String *consume_str()
   return str;
 }
 
+bool check(char *op)
+{
+  if (token->kind != TK_RESERVED || token->len != strlen(op) || memcmp(token->str, op, token->len))
+    return false;
+  return true;
+}
+
 void expect(char *op)
 {
   if (token->kind != TK_RESERVED || token->len != strlen(op) || memcmp(token->str, op, token->len))

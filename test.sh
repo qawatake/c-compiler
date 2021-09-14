@@ -95,5 +95,7 @@ assert 98 'int main() { char *p; p = "abc"; return p[1]; }'
 assert 99 'int main() { char *p; p = "abc"; return p[2]; }'
 assert 0 'int main() { char *p; p = "abc"; return p[3]; }'
 assert 37 'int main(){char *format; format = "%d %s <= printed by ↓\n"; printf(format, 10, "hello, world"); return format[0];}'
+assert 1 "int main(){int x = 1; return x;}"
+assert 99 'int main(){char *a = "abc"; return a[2];}'
 
 echo OK
