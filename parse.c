@@ -120,6 +120,8 @@ LVar *find_lvar(Token *tok)
 
 GVar *find_gvar(Token *tok)
 {
+  if (!tok)
+    return NULL;
 
   GVar *var = globals;
   while (var)
@@ -272,6 +274,34 @@ Node *parse_for_contents()
   return node;
 }
 
+void init_gvar(GVar *gvar)
+{
+  String *str = consume_str();
+  if (str)
+  {
+    gvar->serial = str->serial;
+    gvar->IniType = INI_STR;
+    str->next = strings;
+    strings = str;
+    return;
+  }
+
+  if (consume("&"))
+  {
+    Token *tok = consume_ident();
+    GVar *var = find_gvar(tok);
+    if (!var)
+      error("宣言されていない変数です");
+    gvar->IniType = INI_ADDR;
+    gvar->label = var->name;
+    gvar->labelen = var->len;
+    return;
+  }
+
+  gvar->val = expect_number();
+  gvar->IniType = INI_INT;
+}
+
 void program()
 {
   funcs = NULL;
@@ -316,10 +346,12 @@ void program()
     }
     else
     {
-      expect(";");
       GVar *gvar = newGVar(&var);
       gvar->next = globals;
       globals = gvar;
+      if (consume("="))
+        init_gvar(gvar);
+      expect(";");
     }
   }
 }
@@ -347,29 +379,6 @@ Node *stmt()
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
-    expect(";");
-  }
-  else if (assr(&var))
-  {
-    LVar *lvar = newLVar(&var);
-    lvar->next = scope->locals;
-    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
-    scope->locals = lvar;
-
-    if (consume("="))
-    {
-      node = new_node_lvar(lvar);
-
-      Node *rhs = equality();
-      Type *ty = tyjoin(node->type, rhs->type);
-      node = new_node(ND_ASSIGN, node, rhs);
-      node->type = ty;
-    }
-    else
-    {
-      node = calloc(1, sizeof(Node));
-      node->kind = ND_NONE;
-    }
     expect(";");
   }
   else if (consume("if"))
@@ -421,6 +430,31 @@ Node *stmt()
 
 Node *expr()
 {
+  Node *node;
+  Var var;
+  if (assr(&var))
+  {
+    LVar *lvar = newLVar(&var);
+    lvar->next = scope->locals;
+    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
+    scope->locals = lvar;
+
+    if (consume("="))
+    {
+      node = new_node_lvar(lvar);
+
+      Node *rhs = equality();
+      Type *ty = tyjoin(node->type, rhs->type);
+      node = new_node(ND_ASSIGN, node, rhs);
+      node->type = ty;
+    }
+    else
+    {
+      node = calloc(1, sizeof(Node));
+      node->kind = ND_NONE;
+    }
+    return node;
+  }
   return assign();
 }
 

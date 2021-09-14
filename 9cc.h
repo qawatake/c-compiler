@@ -40,7 +40,7 @@ struct String
   String *next; // 次の文字列
   char *body;   // 文字列本体 (入力文字列へのポインタ)
   int len;      // 文字列の長さ (""を含む)
-  int serial;       // 識別番号
+  int serial;   // 識別番号
 };
 
 // 変数のサイズ
@@ -95,6 +95,16 @@ struct GVar
   char *name; // 変数名
   int len;    // 変数名の長さ
   Type *type; // 変数の型
+  enum
+  {
+    INI_INT,   // int, char
+    INI_ADDR,  // アドレス
+    INI_STR,   // 文字列
+  } IniType;   // 初期値の種類
+  int val;     // 初期値: type が TY_INT, TY_CHAR のときのみ使用
+  int serial;  // 初期値: type が TY_STR のときのみ使用
+  char *label; // 初期値: アセンブリでアドレスを表す識別子. type が TY_PTR のときのみ使用
+  int labelen; // 初期値: アセンブリでアドレスを表す識別子の長さ. type が TY_PTR のときのみ使用
 };
 
 // 抽象構文木のノードの種類
