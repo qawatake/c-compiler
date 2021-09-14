@@ -4,7 +4,7 @@ assert() {
   input="$2"
 
   ./9cc "$input" > tmp.s
-  cc -o tmp tmp.s tmp-plus.o tmp-alloc4.o tmp-palloc2.o
+  cc -o tmp tmp.s tmp-plus.o tmp-alloc4.o tmp-palloc2.o tmp-print.o
   ./tmp
   actual="$?"
 
@@ -21,6 +21,7 @@ echo "#include <stdlib.h>
 void alloc4(int **q, int a, int b, int c, int d) { *q = malloc(4 * sizeof(int)); (*q)[0] = a; (*q)[1] = b; (*q)[2] = c; (*q)[3] = d;}" | cc -xc -c -o tmp-alloc4.o -
 echo "#include <stdlib.h>
 void palloc2(int ***q, int a, int b) {*q = malloc(2 * sizeof(int **)); int **p = *q; p[0] = malloc(sizeof(int*)); p[1] = malloc(sizeof(int*)); *(p[0]) = a; *(p[1]) = b;}" | cc -xc -c -o tmp-palloc2.o -
+echo "#include <stdio.h>" | cc -xc -c -o tmp-print.o -
 
 assert 0 "int main(){0;}"
 assert 42 "int main(){42;}"
@@ -89,5 +90,10 @@ assert 3 "int *x; int main(){int a; x = &a; a = 3; return *x;}"
 assert 3 "int a[4]; int main(){a[0] = 1; a[2] = 2; return a[0] + a[2];}"
 assert 3 "int main(){char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y;}"
 assert 3 "int main(){char x[3]; return sizeof x;}"
+assert 97 'int main() { char *p; p = "abc"; return p[0]; }'
+assert 98 'int main() { char *p; p = "abc"; return p[1]; }'
+assert 99 'int main() { char *p; p = "abc"; return p[2]; }'
+assert 0 'int main() { char *p; p = "abc"; return p[3]; }'
+assert 37 'int main(){char *format; format = "%d %s <= printed by ↓\n"; printf(format, 10, "hello, world"); return format[0];}'
 
 echo OK

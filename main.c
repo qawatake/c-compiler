@@ -8,6 +8,7 @@ int lnum = 0;
 Scope *scope;
 Function *funcs;
 GVar *globals;
+String *strings;
 
 int main(int argc, char **argv)
 {
@@ -26,6 +27,9 @@ int main(int argc, char **argv)
   scope->parent = NULL;
   scope->locals = NULL;
   scope->offset = 0;
+
+  // 文字列の初期化
+  strings = NULL;
 
   // パース
   program();

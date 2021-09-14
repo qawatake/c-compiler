@@ -18,6 +18,7 @@ typedef enum
   TK_SIZEOF,   // sizeof
   TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
+  TK_STR,      // 文字列トークン
   TK_EOF,      // 入力の終わりを表すトークン
 } TokenKind;
 
@@ -30,6 +31,16 @@ struct Token
   int val;        // kind が TK_NUM の場合, その数値
   char *str;      // トークン文字列
   int len;        // トークンの長さ 整数, EOFの場合は0
+};
+
+// 文字列型
+typedef struct String String;
+struct String
+{
+  String *next; // 次の文字列
+  char *body;   // 文字列本体 (入力文字列へのポインタ)
+  int len;      // 文字列の長さ (""を含む)
+  int serial;       // 識別番号
 };
 
 // 変数のサイズ
@@ -113,6 +124,7 @@ typedef enum
   ND_LVAR,      // ローカル変数
   ND_GVAR,      // グローバル変数
   ND_NUM,       // 整数
+  ND_STR,       // 文字列
 } NodeKind;
 
 typedef struct Node Node; // Node_tag Node
@@ -128,6 +140,7 @@ struct Node
   Type *type;    // kind が ND_LVAR の場合のみ使う
   char *name;    // kind が ND_CALL の場合のみ使う
   int len;       // kind が ND_CALL の場合のみ使う
+  int serial;    // kind が ND_STR の場合つかう
 };
 
 typedef struct Function Function;
@@ -168,6 +181,9 @@ extern Function *funcs;
 // グローバル変数
 extern GVar *globals;
 
+// 複数の文字列
+extern String *strings;
+
 /* util.c */
 
 // エラーを報告するための関数
@@ -201,8 +217,12 @@ void type_tree(Type *ty);
 bool consume(char *op);
 
 // 次のトークンが識別子のときには, トークンを1つ進めてトークンを返す
-// それ以外の場合には偽を返す
+// それ以外の場合には NULL を返す
 Token *consume_ident();
+
+// 次のトークンが文字列のときには, トークンを1つ進めてトークンを返す
+// それ以外の場合には NULL を返す
+String *consume_str();
 
 // 次のトークンが期待している記号のときには, トークンを1つ進める
 // それ以外の場合にはエラーを報告する
@@ -254,6 +274,9 @@ Type *tyjoin(Type *lty, Type *rty);
 
 // sizeof に相当する役割
 Size size(Type *ty);
+
+// 現在までに登録された文字列の総数
+int count_strings();
 
 // ローカル変数を変数名で検索する
 // 見つからなかった場合は NULL を返す

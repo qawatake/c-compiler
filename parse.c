@@ -86,6 +86,18 @@ Size size(Type *ty)
   }
 }
 
+int count_strings()
+{
+  int i = 0;
+  String *cur = strings;
+  while (cur)
+  {
+    i++;
+    cur = cur->next;
+  }
+  return i;
+}
+
 LVar *find_lvar(Token *tok)
 {
   Scope *cur = scope;
@@ -658,6 +670,27 @@ Node *primary()
     {
       error("宣言されていない変数です");
     }
+  }
+
+  String *str = consume_str();
+  if (str)
+  {
+    Type *btype = calloc(1, sizeof(Type));
+    btype->kind = TY_CHAR;
+    btype->ptr_to = NULL;
+    Type *ty = calloc(1, sizeof(Type));
+    ty->kind = TY_ARRAY;
+    ty->ptr_to = btype;
+    ty->array_size = str->len - 2;
+
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_STR;
+    node->type = ty;
+    node->serial = str->serial;
+
+    str->next = strings;
+    strings = str;
+    return node;
   }
 
   // そうでなければ数値のはず

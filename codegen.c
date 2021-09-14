@@ -77,6 +77,7 @@ void gen_call(Node *node)
   }
 
   align();
+  printf("  mov al, 0\n"); // 浮動小数点数の引数の個数をALに入れておく
   printf("  call ");
   for (int i = 0; i < node->len; i++)
   {
@@ -90,7 +91,6 @@ void gen_call(Node *node)
 void gen_gvar()
 {
   GVar *var = globals;
-  printf(".data\n");
   while (var)
   {
     strprint(var->name, var->len);
@@ -100,9 +100,24 @@ void gen_gvar()
   }
 }
 
+void gen_str()
+{
+  String *cur = strings;
+  while (cur)
+  {
+    printf(".LC%d:\n", cur->serial);
+    printf("  .string ");
+    strprint(cur->body, cur->len);
+    printf("\n");
+    cur =  cur->next;
+  }
+}
+
 void gen_x86()
 {
   printf(".intel_syntax noprefix\n");
+  printf(".data\n");
+  gen_str();
   gen_gvar();
   Function *cur = funcs; // funcs は連結リストで実装されたスタックなので, 後で登録された関数が先にコード生成される
   printf(".text\n");
@@ -194,6 +209,10 @@ void gen(Node *node)
       printf("  mov rax, [rax]\n");
       break;
     }
+    printf("  push rax\n");
+    return;
+  case ND_STR:
+    printf("  lea rax, .LC%d[rip]\n", node->serial);
     printf("  push rax\n");
     return;
   case ND_ADDR:

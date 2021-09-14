@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,6 +24,21 @@ Token *consume_ident()
     return tok;
   }
   return NULL;
+}
+
+String *consume_str()
+{
+  if (token->kind != TK_STR)
+    return NULL;
+  String *str = calloc(1, sizeof(String));
+  str->body = token->str;
+  str->len = token->len;
+  str->next = strings;
+  // printf("aaa\n");
+  str->serial = count_strings();
+  // printf("bbbb\n");
+  token = token->next;
+  return str;
 }
 
 void expect(char *op)
@@ -95,6 +111,19 @@ Token *tokenize(char *p)
     if (strchr("+-*/()<>=;{},&[]", *p))
     {
       cur = new_token(TK_RESERVED, cur, p++, 1);
+      continue;
+    }
+
+    if (*p == '\"')
+    {
+      int i = 1; // " を含む文字列全体の長さ
+      while (p[i] != '\"')
+      {
+        i++;
+      }
+      i++;
+      cur = new_token(TK_STR, cur, p, i);
+      p += i;
       continue;
     }
 
