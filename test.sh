@@ -114,5 +114,7 @@ assert 99 'int main(){char *a = "abc"; return a[2];}'
 assert 21 "int a = 10; char b = 11; int main(){return a + b;}"
 assert 108 'char *p = "hello, world"; int main(){return p[2];}'
 assert 2 'int a = 1; int *x = &a; int main(){a = 2; return *x;} '
+assert 1 "int main(){int a = 1; /* a = 2; */ return a;}"
+assert 6 "int main(){int a[3]; a[0] = 1; a[1] = 2; a[2] = 3; /* a[1] = 5 */ return a[0] + a[1] + a[2];}"
 
 echo OK

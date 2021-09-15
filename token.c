@@ -106,6 +106,27 @@ Token *tokenize(char *p)
       continue;
     }
 
+    // 行コメント
+    if (startswith(p, "//"))
+    {
+      p += 2;
+      while (*p != '\n')
+        p++;
+      continue;
+    }
+
+    // ブロックコメント
+    if (startswith(p, "/*"))
+    {
+      p += 2;
+      while (!startswith(p, "*/"))
+      {
+        p++;
+      }
+      p += 2;
+      continue;
+    }
+
     // Multi-letter punctuator
     if (startswith(p, "==") || startswith(p, "!=") || startswith(p, ">=") || startswith(p, "<="))
     {
