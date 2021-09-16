@@ -313,6 +313,7 @@ void zoom_out();
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 Node *parse_for_contents();
+int parse_array_literal(Node ***); // 配列要素の可変長配列を参照渡し & 配列要素数を返す
 void program();
 Node *stmt();
 Node *expr();

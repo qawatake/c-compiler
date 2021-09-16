@@ -302,6 +302,35 @@ void init_gvar(GVar *gvar)
   gvar->IniType = INI_INT;
 }
 
+int parse_array_literal(Node ***nds)
+{
+  *nds = malloc(10 * sizeof(Node *));
+  int size = 10;
+  int id = 0;
+  expect("{");
+  if (consume("}"))
+  {
+    (*nds)[0] = NULL;
+    return 0;
+  }
+
+  (*nds)[id] = assign();
+  id++;
+  while (consume(","))
+  {
+    (*nds)[id] = assign();
+    id++;
+    if (id >= size)
+    {
+      size *= 2;
+      *nds = realloc(*nds, size * sizeof(Node *));
+    }
+  }
+  expect("}");
+  (*nds)[id] = NULL;
+  return id;
+}
+
 void program()
 {
   funcs = NULL;
@@ -441,12 +470,51 @@ Node *expr()
 
     if (consume("="))
     {
-      node = new_node_lvar(lvar);
 
-      Node *rhs = equality();
-      Type *ty = tyjoin(node->type, rhs->type);
-      node = new_node(ND_ASSIGN, node, rhs);
-      node->type = ty;
+      if (check("{"))
+      {
+        Node **nds;
+        int nelem = parse_array_literal(&nds);
+        node = new_node(ND_COMP_STMT, NULL, NULL);
+        Node *cur = node;
+        for (int i = 0; i < lvar->type->array_size; i++)
+        {
+          if (i >= lvar->type->array_size)
+            error("配列初期化式で右辺の要素数が左辺の要素数より大きくなっています");
+          Node *nd;
+          Node *lhs = new_node_lvar(lvar);
+          Node *rhs = new_node_num(i);
+          Type *ty = tyjoin(lhs->type, rhs->type);
+          nd = new_node(ND_ADD, lhs, rhs);
+          nd->type = ty;
+
+          lhs = nd;
+          ty = lhs->type;
+          nd = new_node(ND_DEREF, lhs, NULL);
+          nd->type = ty->ptr_to;
+
+          lhs = nd;
+          if (i < nelem)
+            rhs = nds[i];
+          else
+            rhs = new_node_num(0);
+          ty = tyjoin(lhs->type, rhs->type);
+          nd = new_node(ND_ASSIGN, lhs, rhs);
+          nd->type = ty;
+          cur->lhs = nd;
+          cur->rhs = new_node(ND_COMP_STMT, NULL, NULL);
+          cur = cur->rhs;
+        }
+        cur->kind = ND_NONE;
+      }
+      else
+      {
+        node = new_node_lvar(lvar);
+        Node *rhs = equality();
+        Type *ty = tyjoin(node->type, rhs->type);
+        node = new_node(ND_ASSIGN, node, rhs);
+        node->type = ty;
+      }
     }
     else
     {
