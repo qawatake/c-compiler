@@ -78,11 +78,16 @@ Type *seq(Var *var)
     }
   }
 
-  while (consume("["))
+  if (consume("["))
   {
     Type *newty = calloc(1, sizeof(Type));
     newty->kind = TY_ARRAY;
-    newty->array_size = expect_number();
+    int num;
+    if (!consume_num(&num))
+    {
+      num = -1;
+    }
+    newty->array_size = num;
     if (ty == NULL)
     {
       ty = newty;
@@ -93,6 +98,16 @@ Type *seq(Var *var)
       head->ptr_to = newty;
       head = newty;
     }
+    expect("]");
+  }
+
+  while (consume("["))
+  {
+    Type *newty = calloc(1, sizeof(Type));
+    newty->kind = TY_ARRAY;
+    newty->array_size = expect_number();
+    head->ptr_to = newty;
+    head = newty;
     expect("]");
   }
   return ty;
@@ -125,7 +140,8 @@ Type *root()
     ty = calloc(1, sizeof(Type));
     ty->kind = TY_INT;
     ty->ptr_to = NULL;
-  } else if (consume("char"))
+  }
+  else if (consume("char"))
   {
     ty = calloc(1, sizeof(Type));
     ty->kind = TY_CHAR;

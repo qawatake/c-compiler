@@ -64,7 +64,7 @@ struct Type
     TY_ARRAY,        // 配列
   } kind;            // int or pointer
   Type *ptr_to;      // ~ 型へのポインタ
-  size_t array_size; // 配列の要素数
+  int array_size; // 配列の要素数 (未設定の場合は -1)
 };
 
 // 変数の共通要素
@@ -233,6 +233,11 @@ Token *consume_ident();
 // 次のトークンが文字列のときには, トークンを1つ進めてトークンを返す
 // それ以外の場合には NULL を返す
 String *consume_str();
+
+// 次のトークンが数値の場合, トークンを1つ進めて, 真を返す
+// 同時にその数値を参照渡しで返す
+// それ以外の場合には偽を返す
+bool consume_num(int *num);
 
 // 次のトークンが期待している記号であれば, 真を返す
 // それ以外の場合には偽を返す

@@ -41,6 +41,16 @@ String *consume_str()
   return str;
 }
 
+
+bool consume_num(int *num)
+{
+  if (token->kind != TK_NUM)
+    return false;
+  *num = token->val;
+  token = token->next;
+  return true;
+}
+
 bool check(char *op)
 {
   if (token->kind != TK_RESERVED || token->len != strlen(op) || memcmp(token->str, op, token->len))

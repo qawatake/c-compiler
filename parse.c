@@ -475,6 +475,8 @@ Node *expr()
       {
         Node **nds;
         int nelem = parse_array_literal(&nds);
+        if (lvar->type->array_size)
+          lvar->type->array_size = nelem;
         node = new_node(ND_COMP_STMT, NULL, NULL);
         Node *cur = node;
         for (int i = 0; i < lvar->type->array_size; i++)
