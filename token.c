@@ -41,7 +41,6 @@ String *consume_str()
   return str;
 }
 
-
 bool consume_num(int *num)
 {
   if (token->kind != TK_NUM)
@@ -162,6 +161,33 @@ Token *tokenize(char *p)
       i++;
       cur = new_token(TK_STR, cur, p, i);
       p += i;
+      continue;
+    }
+
+    if (*p == '\'')
+    {
+      cur = new_token(TK_NUM, cur, p, 0);
+      p++;
+      if (startswith(p, "\\0"))
+      {
+        cur->val = '\0';
+        p += 3;
+      }
+      else if (startswith(p, "\\t"))
+      {
+        cur->val = '\t';
+        p += 3;
+      }
+      else if (startswith(p, "\\n"))
+      {
+        cur->val = '\n';
+        p += 3;
+      }
+      else
+      {
+        cur->val = *p;
+        p += 2;
+      }
       continue;
     }
 
