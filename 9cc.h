@@ -57,14 +57,14 @@ struct Type
 {
   enum
   {
-    TY_INT_LITERAL,  // 整数リテラル
-    TY_INT,          // int
-    TY_CHAR,         // char
-    TY_PTR,          // ポインタ
-    TY_ARRAY,        // 配列
-  } kind;            // int or pointer
-  Type *ptr_to;      // ~ 型へのポインタ
-  int array_size; // 配列の要素数 (未設定の場合は -1)
+    TY_INT_LITERAL, // 整数リテラル
+    TY_INT,         // int
+    TY_CHAR,        // char
+    TY_PTR,         // ポインタ
+    TY_ARRAY,       // 配列
+  } kind;           // int or pointer
+  Type *ptr_to;     // ~ 型へのポインタ
+  int array_size;   // 配列の要素数 (未設定の場合は -1)
 };
 
 // 変数の共通要素
@@ -135,6 +135,7 @@ typedef enum
   ND_GVAR,      // グローバル変数
   ND_NUM,       // 整数
   ND_STR,       // 文字列
+  ND_ARRAY,     // 配列 {a, b, c}
 } NodeKind;
 
 typedef struct Node Node; // Node_tag Node
@@ -150,7 +151,8 @@ struct Node
   Type *type;    // kind が ND_LVAR の場合のみ使う
   char *name;    // kind が ND_CALL の場合のみ使う
   int len;       // kind が ND_CALL の場合のみ使う
-  int serial;    // kind が ND_STR の場合つかう
+  int serial;    // kind が ND_STR の場合使う
+  Node **elems;  // kind が ND_ARRAY の場合使う. 配列要素の可変長配列
 };
 
 typedef struct Function Function;
@@ -331,6 +333,27 @@ Node *unary();
 Node *parse_func_args();
 Node *comp();
 Node *primary();
+
+/* tree_preprocess.c
+  構文木のプリプロセッサ
+  配列初期化の構文木を再構成する
+  再帰的な処理が必要なため, パースと同時に行うことは難しい
+*/
+
+// 構文木をたどって, 配列初期化を表す枝を入れ替えていく
+// int x[2][2] = {{1, 2}, {3, 4}};
+// =>
+// int x[2][2];
+// x[0] = {1, 2};
+// x[1] = {3, 4};
+// =>
+// int x[2][2];
+// x[0][0] = 1;
+// x[0][1] = 2;
+// x[1][0] = 3;
+// x[1][1] = 4;
+void array_expansion(Node **node);
+
 
 /* codegen.c
   構文木に沿って, コード生成

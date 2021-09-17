@@ -34,6 +34,14 @@ int main(int argc, char **argv)
   // パース
   program();
 
+  // プリプロセッサ (構文木の再構成)
+  Function *cur = funcs;
+  while (cur)
+  {
+    array_expansion(&(cur->body));
+    cur = cur->next;
+  }
+
   // コード生成
   gen_x86();
 

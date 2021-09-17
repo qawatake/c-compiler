@@ -123,5 +123,6 @@ assert 0 "int main(){char x[3] = {1, 2}; return x[2];}"
 assert 10 "int main(){int x[20] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; return x[10];}"
 assert 0 "int main(){int x[20] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; return x[11] + x[12] + x[13] + x[14] + x[15] + x[16] + x[17] + x[18] + x[19];}"
 assert 2 "int main(){int x[] = {0, 1, 2}; return x[2];}"
+assert 11 'int main(){int x = 2; int a[2][2] = {{x, x + 5}, {x * x, x * 3}}; return a[0][1] + a[1][0];}'
 
 echo OK

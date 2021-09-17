@@ -135,6 +135,9 @@ void syntax_tree(int depth, Node *node)
   case ND_GVAR:
     ndkind = "GVAR";
     break;
+  case ND_ARRAY:
+    ndkind = "ARRAY";
+    break;
   case ND_NUM:
     ndkind = "NUM";
     break;
@@ -153,13 +156,21 @@ void syntax_tree(int depth, Node *node)
   if (node->kind == ND_NUM)
     printf("%d", node->val);
 
-  if (node->kind == ND_LVAR || node->kind == ND_CALL)
+  if (node->kind == ND_LVAR || node->kind == ND_CALL || node->kind == ND_GVAR || node->kind == ND_ARRAY)
   {
     printf(" ");
     if (node->type != NULL)
       type_tree(node->type);
   }
   printf("\n");
+
+  if (node->kind == ND_ARRAY)
+  {
+    for (int i = 0; i < node->type->array_size; i++)
+    {
+      syntax_tree(depth + 1, node->elems[i]);
+    }
+  }
 
   if (node->lhs)
     syntax_tree(depth + 1, node->lhs);
