@@ -34,9 +34,7 @@ String *consume_str()
   str->body = token->str;
   str->len = token->len;
   str->next = strings;
-  // printf("aaa\n");
   str->serial = count_strings();
-  // printf("bbbb\n");
   token = token->next;
   return str;
 }

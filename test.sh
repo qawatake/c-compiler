@@ -126,5 +126,7 @@ assert 2 "int main(){int x[] = {0, 1, 2}; return x[2];}"
 assert 11 'int main(){int x = 2; int a[2][2] = {{x, x + 5}, {x * x, x * 3}}; return a[0][1] + a[1][0];}'
 assert 101 "int main(){char a[] = {'h', 'e', 'l', 'l', 'o'}; return a[1];}"
 assert 97 "int main(){char a = 'a'; return a;}"
+assert 101 'int main(){char x[6] = "hello"; return x[1];}'
+assert 101 'int main(){char x[] = "hello"; return x[1];}'
 
 echo OK

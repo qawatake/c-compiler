@@ -209,7 +209,7 @@ Node *new_node_str(String *str)
   btype->ptr_to = NULL;
   ty->kind = TY_ARRAY;
   ty->ptr_to = btype;
-  ty->array_size = str->len - 2;
+  ty->array_size = str->len - 1;
 
   node->kind = ND_STR;
   node->type = ty;

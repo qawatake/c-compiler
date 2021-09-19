@@ -354,6 +354,8 @@ Node *primary();
 // x[1][1] = 4;
 void array_expansion(Node **node);
 
+void str_to_array(Node **pnode);
+
 
 /* codegen.c
   構文木に沿って, コード生成

@@ -135,6 +135,9 @@ void syntax_tree(int depth, Node *node)
   case ND_GVAR:
     ndkind = "GVAR";
     break;
+  case ND_STR:
+    ndkind = "STR";
+    break;
   case ND_ARRAY:
     ndkind = "ARRAY";
     break;
@@ -191,6 +194,9 @@ void type_tree(Type *ty)
     break;
   case TY_INT:
     tkind = "TY_INT";
+    break;
+  case TY_CHAR:
+    tkind = "TY_CHAR";
     break;
   case TY_PTR:
     tkind = "TY_PTR";
