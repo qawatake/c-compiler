@@ -462,19 +462,33 @@ Node *expr()
   if (assr(&var))
   {
     LVar *lvar = newLVar(&var);
-    lvar->next = scope->locals;
-    lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
-    scope->locals = lvar;
 
     if (consume("="))
     {
-      Node *lhs = new_node_lvar(lvar);
       Node *rhs = equality();
+      // 右辺の配列の要素数を左辺の配列の要素数として使う
+      // lvar と lvar node のオフセットを設定する
+      if (lvar->type->kind == TY_ARRAY && rhs->type->kind == TY_ARRAY && lvar->type->array_size == -1)
+      {
+        lvar->type->array_size = rhs->type->array_size;
+      }
+
+      lvar->next = scope->locals;
+      lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
+      scope->locals = lvar;
+
+      Node *lhs = new_node_lvar(lvar);
       node = new_node(ND_ASSIGN, lhs, rhs);
       node->type = lhs->type;
     }
     else
+    {
+      lvar->next = scope->locals;
+      lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
+      scope->locals = lvar;
+
       node = new_node(ND_NONE, NULL, NULL);
+    }
     return node;
   }
   return assign();

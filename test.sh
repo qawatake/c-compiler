@@ -16,6 +16,22 @@ assert() {
   fi
 }
 
+cmp() {
+  input1="$1"
+  input2="$2"
+
+  ./9cc "$input1" > tmp1.s
+  ./9cc "$input2" > tmp2.s
+
+  diff tmp1.s tmp2.s > /dev/null
+  if [ $? = 0 ]; then
+    echo "same assembly from $input1 and $input2"
+  else
+    echo "different assembly from $input1 and $input2"
+    exit 1
+  fi
+}
+
 cat <<EOF | gcc -xc -c -o tmp-test.o -
 #include <stdlib.h>
 int plus(int x, int y) { return x + y; }
@@ -128,5 +144,11 @@ assert 101 "int main(){char a[] = {'h', 'e', 'l', 'l', 'o'}; return a[1];}"
 assert 97 "int main(){char a = 'a'; return a;}"
 assert 101 'int main(){char x[6] = "hello"; return x[1];}'
 assert 101 'int main(){char x[] = "hello"; return x[1];}'
+
+# 出力されるアセンブリの比較
+cmp 'int main(){char x[6] = "hello"; return x[1];}' 'int main(){char x[] = "hello"; return x[1];}'
+cmp "int main(){int x[3] = {0, 1, 2}; return x[2];}" "int main(){int x[] = {0, 1, 2}; return x[2];}"
+cmp "int main(){char a[6] = {'h', 'e', 'l', 'l', 'o', '\0'}; return a[1];}" "int main(){char a[] = {'h', 'e', 'l', 'l', 'o', '\0'}; return a[1];}"
+cmp 'int main(){int x = 2; int a[][2] = {{x, x + 5}, {x * x, x * 3}}; return a[0][1] + a[1][0];}' 'int main(){int x = 2; int a[2][2] = {{x, x + 5}, {x * x, x * 3}}; return a[0][1] + a[1][0];}'
 
 echo OK
