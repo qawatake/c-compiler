@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "9cc.h"
 
-String *find_str(int serial)
+static String *find_str(int serial)
 {
   String *cur = strings;
   while (cur)
@@ -14,7 +14,7 @@ String *find_str(int serial)
   return NULL;
 }
 
-void str_to_array(Node **pnode)
+static void str_to_array(Node **pnode)
 {
   Node *node = *pnode;
   if (!node)
@@ -25,8 +25,6 @@ void str_to_array(Node **pnode)
     Node *lnode = node->lhs;
     String *str = find_str(node->rhs->serial);
     int nelem = str->len - 1;
-    if (lnode->type->array_size < 0)
-      lnode->type->array_size = nelem;
     *pnode = new_node(ND_COMP_STMT, NULL, NULL);
     node = *pnode;
     Node *cur = *pnode;
@@ -65,7 +63,19 @@ void str_to_array(Node **pnode)
     str_to_array(&(node->rhs));
 }
 
-void array_expansion(Node **pnode)
+// 構文木をたどって, 配列初期化を表す枝を入れ替えていく
+// int x[2][2] = {{1, 2}, {3, 4}};
+// =>
+// int x[2][2];
+// x[0] = {1, 2};
+// x[1] = {3, 4};
+// =>
+// int x[2][2];
+// x[0][0] = 1;
+// x[0][1] = 2;
+// x[1][0] = 3;
+// x[1][1] = 4;
+static void array_expansion(Node **pnode)
 {
   Node *node = *pnode;
   if (!node)
@@ -76,8 +86,6 @@ void array_expansion(Node **pnode)
     Node *lnode = node->lhs;
     Node **elems = node->rhs->elems;
     int nelem = node->rhs->type->array_size;
-    if (lnode->type->array_size < 0)
-      lnode->type->array_size = nelem;
 
     *pnode = new_node(ND_COMP_STMT, NULL, NULL);
     node = *pnode;
@@ -117,4 +125,10 @@ void array_expansion(Node **pnode)
     array_expansion(&(node->lhs));
   if (node->rhs)
     array_expansion(&(node->rhs));
+}
+
+void preprocess(Node **pnode)
+{
+  str_to_array(pnode);
+  array_expansion(pnode);
 }

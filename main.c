@@ -38,8 +38,7 @@ int main(int argc, char **argv)
   Function *cur = funcs;
   while (cur)
   {
-    str_to_array(&(cur->body));
-    array_expansion(&(cur->body));
+    preprocess(&(cur->body));
     cur = cur->next;
   }
 

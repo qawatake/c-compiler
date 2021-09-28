@@ -340,21 +340,7 @@ Node *primary();
   再帰的な処理が必要なため, パースと同時に行うことは難しい
 */
 
-// 構文木をたどって, 配列初期化を表す枝を入れ替えていく
-// int x[2][2] = {{1, 2}, {3, 4}};
-// =>
-// int x[2][2];
-// x[0] = {1, 2};
-// x[1] = {3, 4};
-// =>
-// int x[2][2];
-// x[0][0] = 1;
-// x[0][1] = 2;
-// x[1][0] = 3;
-// x[1][1] = 4;
-void array_expansion(Node **node);
-
-void str_to_array(Node **pnode);
+void preprocess(Node **pnode);
 
 
 /* codegen.c
