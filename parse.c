@@ -201,7 +201,7 @@ Node *new_node_gvar(GVar *gvar)
 
 Node *new_node_str(String *str)
 {
-  Node *node = calloc(1, sizeof(String));
+  Node *node = calloc(1, sizeof(Node));
   Type *btype = calloc(1, sizeof(Type));
   Type *ty = calloc(1, sizeof(Type));
 
