@@ -144,16 +144,16 @@ struct GVar
   char *name; // 変数名
   int len;    // 変数名の長さ
   Type *type; // 変数の型
-  enum
-  {
-    INI_INT,   // int, char
-    INI_ADDR,  // アドレス
-    INI_STR,   // 文字列
-  } IniType;   // 初期値の種類
-  int val;     // 初期値: type が TY_INT, TY_CHAR のときのみ使用
-  int serial;  // 初期値: type が TY_STR のときのみ使用
-  char *label; // 初期値: アセンブリでアドレスを表す識別子. type が TY_PTR のときのみ使用
-  int labelen; // 初期値: アセンブリでアドレスを表す識別子の長さ. type が TY_PTR のときのみ使用
+  // enum
+  // {
+  //   INI_INT,   // int, char
+  //   INI_ADDR,  // アドレス
+  //   INI_STR,   // 文字列
+  // } IniType;   // 初期値の種類
+  // int val;     // 初期値: type が TY_INT, TY_CHAR のときのみ使用
+  // int serial;  // 初期値: type が TY_STR のときのみ使用
+  // char *label; // 初期値: アセンブリでアドレスを表す識別子. type が TY_PTR のときのみ使用
+  // int labelen; // 初期値: アセンブリでアドレスを表す識別子の長さ. type が TY_PTR のときのみ使用
   Node *ini; // 初期値
 };
 
@@ -308,7 +308,7 @@ LVar *find_lvar(Token *tok);
 
 // グローバル変数を変数名検索する
 // 見つからなかった場合はNULLを返す
-GVar *find_gvar(Token *tok);
+GVar *find_gvar(char *name, int len);
 
 // 関数を名前で検索する
 // 見つからなかった場合はNULLを返す
@@ -360,10 +360,15 @@ void dealign();
 void gen_lval(Node *node);
 void gen_call(Node *node);
 void gen_x86();
-void gen_gvar();
+void gen_gvars();
 void gen_func(Function *fn);
 void gen(Node *node);
 
-void gen_gvar2(GVar *gvar);
+
+/* glblcodegen.c
+  グローバル変数の初期化式を解析
+*/
+// グローバル変数の初期化式を解析
+void gen_gvar(GVar *gvar);
 
 #endif

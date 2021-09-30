@@ -88,40 +88,12 @@ void gen_call(Node *node)
   printf("  push rax\n");
 }
 
-void gen_gvar()
+void gen_gvars()
 {
   GVar *var = globals;
   while (var)
   {
-    gen_gvar2(var);
-    // strprint(var->name, var->len);
-    // printf(":\n");
-
-    // switch (var->IniType)
-    // {
-    // case INI_INT:
-    //   switch (var->type->kind)
-    //   {
-    //   case TY_INT:
-    //     printf("  .long %d\n", var->val);
-    //     break;
-    //   case TY_CHAR:
-    //     printf("  .byte %d\n", var->val);
-    //     break;
-    //   }
-    //   break;
-    // case INI_ADDR:
-    //   printf("  .quad ");
-    //   strprint(var->label, var->len);
-    //   printf("\n");
-    //   break;
-    // case INI_STR:
-    //   printf("  .quad .LC%d\n", var->serial);
-    //   break;
-    // default:
-    //   printf("  .zero %d\n", size(var->type));
-    // }
-
+    gen_gvar(var);
     var = var->next;
   }
 }
@@ -144,7 +116,7 @@ void gen_x86()
   printf(".intel_syntax noprefix\n");
   printf(".data\n");
   gen_str();
-  gen_gvar();
+  gen_gvars();
   Function *cur = funcs; // funcs は連結リストで実装されたスタックなので, 後で登録された関数が先にコード生成される
   printf(".text\n");
   while (cur)

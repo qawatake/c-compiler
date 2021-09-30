@@ -148,6 +148,9 @@ assert 101 'int main(){char x[6] = "hello"; return x[1];}'
 assert 101 'int main(){char x[] = "hello"; return x[1];}'
 assert 197 'int main(){char *x[] = {"ab", "cd"}; return x[0][1] + x[1][0];}'
 assert 197 'int main(){char x[][3] = {"ab", "cd"}; return x[0][1] + x[1][0];}'
+assert 37 'int a = 1; int *x = 1 + 4 - 3 + &a - 3; int main(){char *format; format = "%p %p <= printed by ↓\n"; printf(format, &a, x); return format[0];}'
+assert 1 'int a = 1; int *x = &a; int main(){return *x;}'
+assert 98 'char *a = "abc"; int main(){return a[1];}'
 
 # 出力されるアセンブリの比較
 cmp 'int main(){char x[6] = "hello"; return x[1];}' 'int main(){char x[] = "hello"; return x[1];}'

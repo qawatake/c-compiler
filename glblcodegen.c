@@ -3,8 +3,9 @@
 #include "9cc.h"
 
 static int ini_num(Node *node);
+static GVar *find_addrvar(Node *node);
 
-void gen_gvar2(GVar *var)
+void gen_gvar(GVar *var)
 {
   strprint(var->name, var->len);
   printf(":\n");
@@ -27,6 +28,22 @@ void gen_gvar2(GVar *var)
   {
     int val = ini_num(var->ini);
     printf("  .byte %d\n", val);
+    return;
+  }
+  if (var->type->kind == TY_PTR)
+  {
+    if (var->ini->kind == ND_STR)
+    {
+      printf("  .quad .LC%d\n", var->ini->serial);
+    }
+    else
+    {
+      int val = ini_num(var->ini);
+      GVar *refvar = find_addrvar(var->ini);
+      printf("  .quad ");
+      strprint(refvar->name, refvar->len);
+      printf("+%d\n", val);
+    }
     return;
   }
 
@@ -60,6 +77,27 @@ int ini_num(Node *node)
   case ND_NE:
     return ini_num(node->lhs) != ini_num(node->rhs);
   default:
-    error("NodeKind = %d は int/char 型のグローバル変数の初期化式で処理できません", node->kind);
+    return 0;
   }
+}
+
+// 構文木から最初に検出した &a の a を返す
+// ただし, a はグローバル変数
+GVar *find_addrvar(Node *node)
+{
+  if (!node)
+    return NULL;
+
+  GVar *gvar = NULL;
+
+  if (node->kind == ND_ADDR)
+  {
+    gvar = find_gvar(node->lhs->name, node->lhs->len);
+  }
+  else if (gvar = find_addrvar(node->lhs))
+    ;
+  else if (gvar = find_addrvar(node->rhs))
+    ;
+
+  return gvar;
 }

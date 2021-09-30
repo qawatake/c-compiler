@@ -118,15 +118,12 @@ LVar *find_lvar(Token *tok)
   return NULL;
 }
 
-GVar *find_gvar(Token *tok)
+GVar *find_gvar(char *name, int len)
 {
-  if (!tok)
-    return NULL;
-
   GVar *var = globals;
   while (var)
   {
-    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+    if (var->len == len && !memcmp(name, var->name, var->len))
       return var;
     var = var->next;
   }
@@ -274,34 +271,6 @@ Node *parse_for_contents()
   return node;
 }
 
-void init_gvar(GVar *gvar)
-{
-  String *str = consume_str();
-  if (str)
-  {
-    gvar->serial = str->serial;
-    gvar->IniType = INI_STR;
-    str->next = strings;
-    strings = str;
-    return;
-  }
-
-  if (consume("&"))
-  {
-    Token *tok = consume_ident();
-    GVar *var = find_gvar(tok);
-    if (!var)
-      error("宣言されていない変数です");
-    gvar->IniType = INI_ADDR;
-    gvar->label = var->name;
-    gvar->labelen = var->len;
-    return;
-  }
-
-  gvar->val = expect_number();
-  gvar->IniType = INI_INT;
-}
-
 int parse_array_literal(Node ***nds)
 {
   *nds = malloc(10 * sizeof(Node *));
@@ -380,7 +349,6 @@ void program()
       globals = gvar;
       if (consume("="))
         gvar->ini = equality();
-      // init_gvar(gvar);
       expect(";");
     }
   }
@@ -754,7 +722,7 @@ Node *primary()
     }
 
     LVar *lvar = find_lvar(tok);
-    GVar *gvar = find_gvar(tok);
+    GVar *gvar = find_gvar(tok->str, tok->len);
     if (lvar)
       return new_node_lvar(lvar);
     else if (gvar)
