@@ -76,36 +76,6 @@ struct Var
   Type *type; // 変数の型
 };
 
-// ローカル変数
-typedef struct LVar LVar;
-struct LVar
-{
-  LVar *next; // 次の変数か NULL
-  char *name; // 変数の名前
-  int len;    // 変数の長さ
-  int offset; // ベースポインタ (RBP) からのオフセット
-  Type *type; // 変数の型
-};
-
-// グローバル変数
-typedef struct GVar GVar;
-struct GVar
-{
-  GVar *next; // 次の変数か NULL
-  char *name; // 変数名
-  int len;    // 変数名の長さ
-  Type *type; // 変数の型
-  enum
-  {
-    INI_INT,   // int, char
-    INI_ADDR,  // アドレス
-    INI_STR,   // 文字列
-  } IniType;   // 初期値の種類
-  int val;     // 初期値: type が TY_INT, TY_CHAR のときのみ使用
-  int serial;  // 初期値: type が TY_STR のときのみ使用
-  char *label; // 初期値: アセンブリでアドレスを表す識別子. type が TY_PTR のときのみ使用
-  int labelen; // 初期値: アセンブリでアドレスを表す識別子の長さ. type が TY_PTR のときのみ使用
-};
 
 // 抽象構文木のノードの種類
 typedef enum
@@ -153,6 +123,38 @@ struct Node
   int len;       // kind が ND_CALL の場合のみ使う
   int serial;    // kind が ND_STR の場合使う
   Node **elems;  // kind が ND_ARRAY の場合使う. 配列要素の可変長配列
+};
+
+// ローカル変数
+typedef struct LVar LVar;
+struct LVar
+{
+  LVar *next; // 次の変数か NULL
+  char *name; // 変数の名前
+  int len;    // 変数の長さ
+  int offset; // ベースポインタ (RBP) からのオフセット
+  Type *type; // 変数の型
+};
+
+// グローバル変数
+typedef struct GVar GVar;
+struct GVar
+{
+  GVar *next; // 次の変数か NULL
+  char *name; // 変数名
+  int len;    // 変数名の長さ
+  Type *type; // 変数の型
+  enum
+  {
+    INI_INT,   // int, char
+    INI_ADDR,  // アドレス
+    INI_STR,   // 文字列
+  } IniType;   // 初期値の種類
+  int val;     // 初期値: type が TY_INT, TY_CHAR のときのみ使用
+  int serial;  // 初期値: type が TY_STR のときのみ使用
+  char *label; // 初期値: アセンブリでアドレスを表す識別子. type が TY_PTR のときのみ使用
+  int labelen; // 初期値: アセンブリでアドレスを表す識別子の長さ. type が TY_PTR のときのみ使用
+  Node *ini; // 初期値
 };
 
 typedef struct Function Function;
@@ -361,4 +363,7 @@ void gen_x86();
 void gen_gvar();
 void gen_func(Function *fn);
 void gen(Node *node);
+
+void gen_gvar2(GVar *gvar);
+
 #endif

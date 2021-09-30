@@ -379,7 +379,8 @@ void program()
       gvar->next = globals;
       globals = gvar;
       if (consume("="))
-        init_gvar(gvar);
+        gvar->ini = equality();
+      // init_gvar(gvar);
       expect(";");
     }
   }

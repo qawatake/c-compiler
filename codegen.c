@@ -93,33 +93,34 @@ void gen_gvar()
   GVar *var = globals;
   while (var)
   {
-    strprint(var->name, var->len);
-    printf(":\n");
+    gen_gvar2(var);
+    // strprint(var->name, var->len);
+    // printf(":\n");
 
-    switch (var->IniType)
-    {
-    case INI_INT:
-      switch (var->type->kind)
-      {
-      case TY_INT:
-        printf("  .long %d\n", var->val);
-        break;
-      case TY_CHAR:
-        printf("  .byte %d\n", var->val);
-        break;
-      }
-      break;
-    case INI_ADDR:
-      printf("  .quad ");
-      strprint(var->label, var->len);
-      printf("\n");
-      break;
-    case INI_STR:
-      printf("  .quad .LC%d\n", var->serial);
-      break;
-    default:
-      printf("  .zero %d\n", size(var->type));
-    }
+    // switch (var->IniType)
+    // {
+    // case INI_INT:
+    //   switch (var->type->kind)
+    //   {
+    //   case TY_INT:
+    //     printf("  .long %d\n", var->val);
+    //     break;
+    //   case TY_CHAR:
+    //     printf("  .byte %d\n", var->val);
+    //     break;
+    //   }
+    //   break;
+    // case INI_ADDR:
+    //   printf("  .quad ");
+    //   strprint(var->label, var->len);
+    //   printf("\n");
+    //   break;
+    // case INI_STR:
+    //   printf("  .quad .LC%d\n", var->serial);
+    //   break;
+    // default:
+    //   printf("  .zero %d\n", size(var->type));
+    // }
 
     var = var->next;
   }
