@@ -52,6 +52,7 @@ void palloc2(int ***q, int a, int b)
 }
 EOF
 
+assert 99 'char a[] = "abc"; int main(){return a[2];}'
 assert 1 "int a = 1; int main(){return a;}"
 assert 19 "int a = 1 + 2 - 3 + 4 * 4 - 6 / 5 + (3 == 3) + (3 != 3) + (4 < 5) + (4 > 5) + (4 <= 5) + (5 >= 4); int main(){return a;}"
 assert 19 "char a = 1 + 2 - 3 + 4 * 4 - 6 / 5 + (3 == 3) + (3 != 3) + (4 < 5) + (4 > 5) + (4 <= 5) + (5 >= 4); int main(){return a;}"

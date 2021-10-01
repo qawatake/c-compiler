@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "9cc.h"
 
-static String *find_str(int serial)
+String *find_str(int serial)
 {
   String *cur = strings;
   while (cur)

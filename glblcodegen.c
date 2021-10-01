@@ -46,6 +46,21 @@ void gen_gvar(GVar *var)
     }
     return;
   }
+  if (var->type->kind == TY_ARRAY)
+  {
+    if (var->ini->kind == ND_STR)
+    {
+      String *str = find_str(var->ini->serial);
+      printf("  .string ");
+      strprint(str->body, str->len);
+      printf("\n");
+    }
+    else
+    {
+
+    }
+    return;
+  }
 
   printf("この型のグローバル変数は初期化できません: ");
   type_tree(var->type);

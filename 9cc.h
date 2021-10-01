@@ -342,6 +342,9 @@ Node *primary();
   再帰的な処理が必要なため, パースと同時に行うことは難しい
 */
 
+// シリアル番号から該当する文字列を検索する
+String *find_str(int serial);
+
 void preprocess(Node **pnode);
 
 
