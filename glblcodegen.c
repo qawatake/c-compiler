@@ -165,8 +165,12 @@ void gen_gvar_atom(Type *ty, Node *ini)
       strprint(str->body, str->len);
       printf("\n");
     }
-    else
+    else if (ini->kind == ND_ARRAY)
     {
+      for (int id = 0; ini->elems[id]; id++)
+      {
+        gen_gvar_atom(ty->ptr_to, ini->elems[id]);
+      }
     }
     return;
   }

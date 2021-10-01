@@ -58,6 +58,9 @@ assert 37 'int a = 1; int *x = 1 + 4 - 3 + &a - 3; int main(){char *format; form
 assert 1 'int a = 1; int *x = &a; int main(){return *x;}'
 assert 98 'char *a = "abc"; int main(){return a[1];}'
 assert 99 'char a[] = "abc"; int main(){return a[2];}'
+assert 33 "int x[3] = {1, 2 + 3, 4 + 5 + 6}; int main(){return sizeof(x) + x[0] + x[1] + x[2];}"
+assert 2 "int a; int *x[] = {&a, &a +1}; int main(){a = 2; return *x[0];}"
+
 assert 0 "int main(){0;}"
 assert 42 "int main(){42;}"
 assert 21 "int main(){5+20-4;}"
