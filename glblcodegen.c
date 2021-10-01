@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "9cc.h"
 
+static void gen_gvar_atom(Type *ty, Node *ini);
 static int ini_num(Node *node);
 static GVar *find_addrvar(Node *node);
 
@@ -10,62 +11,63 @@ void gen_gvar(GVar *var)
   strprint(var->name, var->len);
   printf(":\n");
 
-  if (!(var->ini))
-  {
+  gen_gvar_atom(var->type, var->ini);
 
-    printf("  .zero %d\n", size(var->type));
-    return;
-  }
+  // if (!(var->ini))
+  // {
 
-  // switch 文は内部でローカル変数を宣言できないので, if 文で実装
-  if (var->type->kind == TY_INT)
-  {
-    int val = ini_num(var->ini);
-    printf("  .long %d\n", val);
-    return;
-  }
-  if (var->type->kind == TY_CHAR)
-  {
-    int val = ini_num(var->ini);
-    printf("  .byte %d\n", val);
-    return;
-  }
-  if (var->type->kind == TY_PTR)
-  {
-    if (var->ini->kind == ND_STR)
-    {
-      printf("  .quad .LC%d\n", var->ini->serial);
-    }
-    else
-    {
-      int val = ini_num(var->ini);
-      GVar *refvar = find_addrvar(var->ini);
-      printf("  .quad ");
-      strprint(refvar->name, refvar->len);
-      printf("+%d\n", val);
-    }
-    return;
-  }
-  if (var->type->kind == TY_ARRAY)
-  {
-    if (var->ini->kind == ND_STR)
-    {
-      String *str = find_str(var->ini->serial);
-      printf("  .string ");
-      strprint(str->body, str->len);
-      printf("\n");
-    }
-    else
-    {
+  //   printf("  .zero %d\n", size(var->type));
+  //   return;
+  // }
 
-    }
-    return;
-  }
+  // // switch 文は内部でローカル変数を宣言できないので, if 文で実装
+  // if (var->type->kind == TY_INT)
+  // {
+  //   int val = ini_num(var->ini);
+  //   printf("  .long %d\n", val);
+  //   return;
+  // }
+  // if (var->type->kind == TY_CHAR)
+  // {
+  //   int val = ini_num(var->ini);
+  //   printf("  .byte %d\n", val);
+  //   return;
+  // }
+  // if (var->type->kind == TY_PTR)
+  // {
+  //   if (var->ini->kind == ND_STR)
+  //   {
+  //     printf("  .quad .LC%d\n", var->ini->serial);
+  //   }
+  //   else
+  //   {
+  //     int val = ini_num(var->ini);
+  //     GVar *refvar = find_addrvar(var->ini);
+  //     printf("  .quad ");
+  //     strprint(refvar->name, refvar->len);
+  //     printf("+%d\n", val);
+  //   }
+  //   return;
+  // }
+  // if (var->type->kind == TY_ARRAY)
+  // {
+  //   if (var->ini->kind == ND_STR)
+  //   {
+  //     String *str = find_str(var->ini->serial);
+  //     printf("  .string ");
+  //     strprint(str->body, str->len);
+  //     printf("\n");
+  //   }
+  //   else
+  //   {
+  //   }
+  //   return;
+  // }
 
-  printf("この型のグローバル変数は初期化できません: ");
-  type_tree(var->type);
-  printf("\n");
-  exit(1);
+  // printf("この型のグローバル変数は初期化できません: ");
+  // type_tree(var->type);
+  // printf("\n");
+  // exit(1);
 }
 
 int ini_num(Node *node)
@@ -115,4 +117,62 @@ GVar *find_addrvar(Node *node)
     ;
 
   return gvar;
+}
+
+void gen_gvar_atom(Type *ty, Node *ini)
+{
+  if (!ini)
+  {
+    printf("  .zero %d\n", size(ty));
+    return;
+  }
+
+  // switch 文は内部でローカル変数を宣言できないので, if 文で実装
+  if (ty->kind == TY_INT)
+  {
+    int val = ini_num(ini);
+    printf("  .long %d\n", val);
+    return;
+  }
+  if (ty->kind == TY_CHAR)
+  {
+    int val = ini_num(ini);
+    printf("  .byte %d\n", val);
+    return;
+  }
+  if (ty->kind == TY_PTR)
+  {
+    if (ini->kind == ND_STR)
+    {
+      printf("  .quad .LC%d\n", ini->serial);
+    }
+    else
+    {
+      int val = ini_num(ini);
+      GVar *refvar = find_addrvar(ini);
+      printf("  .quad ");
+      strprint(refvar->name, refvar->len);
+      printf("+%d\n", val * size(ty->ptr_to));
+    }
+    return;
+  }
+  if (ty->kind == TY_ARRAY)
+  {
+    if (ini->kind == ND_STR)
+    {
+      String *str = find_str(ini->serial);
+      printf("  .string ");
+      strprint(str->body, str->len);
+      printf("\n");
+    }
+    else
+    {
+    }
+    return;
+  }
+
+  printf("この型のグローバル変数は初期化できません: ");
+  type_tree(ty);
+  printf("\n");
+  exit(1);
 }

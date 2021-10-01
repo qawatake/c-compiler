@@ -52,10 +52,12 @@ void palloc2(int ***q, int a, int b)
 }
 EOF
 
-assert 99 'char a[] = "abc"; int main(){return a[2];}'
-assert 1 "int a = 1; int main(){return a;}"
 assert 19 "int a = 1 + 2 - 3 + 4 * 4 - 6 / 5 + (3 == 3) + (3 != 3) + (4 < 5) + (4 > 5) + (4 <= 5) + (5 >= 4); int main(){return a;}"
 assert 19 "char a = 1 + 2 - 3 + 4 * 4 - 6 / 5 + (3 == 3) + (3 != 3) + (4 < 5) + (4 > 5) + (4 <= 5) + (5 >= 4); int main(){return a;}"
+assert 37 'int a = 1; int *x = 1 + 4 - 3 + &a - 3; int main(){char *format; format = "%p %p <= printed by ↓\n"; printf(format, &a, x); return format[0];}'
+assert 1 'int a = 1; int *x = &a; int main(){return *x;}'
+assert 98 'char *a = "abc"; int main(){return a[1];}'
+assert 99 'char a[] = "abc"; int main(){return a[2];}'
 assert 0 "int main(){0;}"
 assert 42 "int main(){42;}"
 assert 21 "int main(){5+20-4;}"
