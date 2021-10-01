@@ -111,6 +111,12 @@ GVar *find_addrvar(Node *node)
   {
     gvar = find_gvar(node->lhs->name, node->lhs->len);
   }
+  else if (node->kind == ND_GVAR)
+  {
+    if (node->type->kind != TY_ARRAY)
+      error("グローバル変数の初期化式で, &がついていない配列でない変数をしようしています");
+    gvar = find_gvar(node->name, node->len);
+  }
   else if (gvar = find_addrvar(node->lhs))
     ;
   else if (gvar = find_addrvar(node->rhs))
