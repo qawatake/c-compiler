@@ -93,7 +93,10 @@ void gen_gvars()
   GVar *var = globals;
   while (var)
   {
-    gen_gvar(var);
+    strprint(var->name, var->len);
+    printf(":\n");
+
+    gen_gvar(var->type, var->ini);
     var = var->next;
   }
 }

@@ -52,16 +52,6 @@ void palloc2(int ***q, int a, int b)
 }
 EOF
 
-assert 19 "int a = 1 + 2 - 3 + 4 * 4 - 6 / 5 + (3 == 3) + (3 != 3) + (4 < 5) + (4 > 5) + (4 <= 5) + (5 >= 4); int main(){return a;}"
-assert 19 "char a = 1 + 2 - 3 + 4 * 4 - 6 / 5 + (3 == 3) + (3 != 3) + (4 < 5) + (4 > 5) + (4 <= 5) + (5 >= 4); int main(){return a;}"
-assert 37 'int a = 1; int *x = 1 + 4 - 3 + &a - 3; int main(){char *format; format = "%p %p <= printed by ↓\n"; printf(format, &a, x); return format[0];}'
-assert 1 'int a = 1; int *x = &a; int main(){return *x;}'
-assert 98 'char *a = "abc"; int main(){return a[1];}'
-assert 99 'char a[] = "abc"; int main(){return a[2];}'
-assert 33 "int x[3] = {1, 2 + 3, 4 + 5 + 6}; int main(){return sizeof(x) + x[0] + x[1] + x[2];}"
-assert 2 "int a; int *x[] = {&a, &a +1}; int main(){a = 2; return *x[0];}"
-assert 7 "int a[3]; int *x[3] = {a, a+1, a+2}; int main(){a[0] = 1; a[1] = 2; a[2] = 4; return *x[0] + *x[1] + *x[2];}"
-
 assert 0 "int main(){0;}"
 assert 42 "int main(){42;}"
 assert 21 "int main(){5+20-4;}"
@@ -157,7 +147,16 @@ assert 197 'int main(){char *x[] = {"ab", "cd"}; return x[0][1] + x[1][0];}'
 assert 197 'int main(){char x[][3] = {"ab", "cd"}; return x[0][1] + x[1][0];}'
 assert 37 'int a = 1; int *x = 1 + 4 - 3 + &a - 3; int main(){char *format; format = "%p %p <= printed by ↓\n"; printf(format, &a, x); return format[0];}'
 assert 1 'int a = 1; int *x = &a; int main(){return *x;}'
+assert 19 "int a = 1 + 2 - 3 + 4 * 4 - 6 / 5 + (3 == 3) + (3 != 3) + (4 < 5) + (4 > 5) + (4 <= 5) + (5 >= 4); int main(){return a;}"
+assert 19 "char a = 1 + 2 - 3 + 4 * 4 - 6 / 5 + (3 == 3) + (3 != 3) + (4 < 5) + (4 > 5) + (4 <= 5) + (5 >= 4); int main(){return a;}"
+assert 37 'int a = 1; int *x = 1 + 4 - 3 + &a - 3; int main(){char *format; format = "%p %p <= printed by ↓\n"; printf(format, &a, x); return format[0];}'
+assert 1 'int a = 1; int *x = &a; int main(){return *x;}'
 assert 98 'char *a = "abc"; int main(){return a[1];}'
+assert 99 'char a[] = "abc"; int main(){return a[2];}'
+assert 33 "int x[3] = {1, 2 + 3, 4 + 5 + 6}; int main(){return sizeof(x) + x[0] + x[1] + x[2];}"
+assert 33 "int x[] = {1, 2 + 3, 4 + 5 + 6}; int main(){return sizeof(x) + x[0] + x[1] + x[2];}"
+assert 2 "int a; int *x[] = {&a, &a +1}; int main(){a = 2; return *x[0];}"
+assert 7 "int a[3]; int *x[3] = {a, a+1, a+2}; int main(){a[0] = 1; a[1] = 2; a[2] = 4; return *x[0] + *x[1] + *x[2];}"
 
 # 出力されるアセンブリの比較
 cmp 'int main(){char x[6] = "hello"; return x[1];}' 'int main(){char x[] = "hello"; return x[1];}'

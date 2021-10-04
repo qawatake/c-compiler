@@ -348,7 +348,13 @@ void program()
       gvar->next = globals;
       globals = gvar;
       if (consume("="))
+      {
         gvar->ini = equality();
+        if (gvar->type->kind == TY_ARRAY && gvar->ini->type->kind == TY_ARRAY && gvar->type->array_size == -1)
+        {
+          gvar->type->array_size = gvar->ini->type->array_size;
+        }
+      }
       expect(";");
     }
   }

@@ -372,6 +372,7 @@ void gen(Node *node);
   グローバル変数の初期化式を解析
 */
 // グローバル変数の初期化式を解析
-void gen_gvar(GVar *gvar);
+// アセンブリでの変数宣言のうち, 内容部分 (インデントされた部分) を出力する
+void gen_gvar(Type *ty, Node *ini);
 
 #endif
