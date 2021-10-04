@@ -72,9 +72,18 @@ Size size(Type *ty)
   if (ty->kind == TY_STRUCT)
   {
     int totalsize = 0;
-    for (int id = 0; ty->members[id]; id++)
+    int max_mem_size = 0;
+    int id = 0;
+    while (ty->members[id])
     {
-      totalsize += size(ty->members[id]);
+      if (size(ty->members[id]) > max_mem_size)
+        max_mem_size = size(ty->members[id]);
+      id++;
+    }
+    if (id)
+    {
+      totalsize = ty->members[id - 1]->offset + size(ty->members[id - 1]);
+      totalsize += (max_mem_size + totalsize) % max_mem_size ? max_mem_size - (max_mem_size + totalsize) % max_mem_size : 0;
     }
     return totalsize;
   }

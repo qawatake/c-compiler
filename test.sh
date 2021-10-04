@@ -54,6 +54,8 @@ EOF
 
 assert 0 "int main(){struct {} x; return sizeof x;}"
 assert 4 "int main(){struct {int a;} x; return sizeof x;}"
+assert 8 "int main(){struct{char a; char b; int c;} x; return sizeof x;}"
+assert 12 "int main(){struct{char a; char b; int c; char d;} x; return sizeof x;}"
 
 assert 0 "int main(){0;}"
 assert 42 "int main(){42;}"

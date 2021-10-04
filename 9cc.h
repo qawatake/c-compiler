@@ -67,7 +67,8 @@ struct Type
   } kind;           // int or pointer
   Type *ptr_to;     // ~ 型へのポインタ
   int array_size;   // 配列の要素数 (未設定の場合は -1)
-  Type **members;   // kind が TY_STRUCT の場合使う. メンバ要素の可変長配列
+  Type **members;   // kind が TY_STRUCT の場合に使う. メンバ要素の可変長配列
+  int offset;       // kind が TY_STRUCT の場合に使う. メンバ要素のオフセット
 };
 
 // 変数の共通要素

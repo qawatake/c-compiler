@@ -161,9 +161,10 @@ Type *strct()
   ty->kind = TY_STRUCT;
   ty->ptr_to = NULL;
   expect("{");
-  int size = 10;
+  int nmem = 10;
   Type **members = malloc(10 * sizeof(Type));
   int id = 0;
+  int offset = 0;
   for (;;)
   {
     if (consume("}"))
@@ -173,11 +174,16 @@ Type *strct()
     assr(&var);
     expect(";");
     members[id] = var.type;
+
+    offset += (size(members[id]) + offset) % size(members[id]) ?size(members[id]) - (size(members[id]) + offset) % size(members[id]) : 0;
+    members[id]->offset = offset;
+    offset += size(members[id]);
+
     id++;
-    if (id >= size)
+    if (id >= nmem)
     {
-      size *= 2;
-      members = realloc(members, size);
+      nmem *= 2;
+      members = realloc(members, nmem);
     }
   }
   members[id] = NULL;
