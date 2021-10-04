@@ -16,6 +16,7 @@ typedef enum
   TK_INT,      // int
   TK_CHAR,     // char
   TK_SIZEOF,   // sizeof
+  TK_STRUCT,   // struct
   TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
   TK_STR,      // 文字列トークン
@@ -62,6 +63,7 @@ struct Type
     TY_CHAR,        // char
     TY_PTR,         // ポインタ
     TY_ARRAY,       // 配列
+    TY_STRUCT,      // struct
   } kind;           // int or pointer
   Type *ptr_to;     // ~ 型へのポインタ
   int array_size;   // 配列の要素数 (未設定の場合は -1)
@@ -75,7 +77,6 @@ struct Var
   int len;    // 変数名の長さ
   Type *type; // 変数の型
 };
-
 
 // 抽象構文木のノードの種類
 typedef enum
@@ -347,7 +348,6 @@ String *find_str(int serial);
 
 void preprocess(Node **pnode);
 
-
 /* codegen.c
   構文木に沿って, コード生成
 */
@@ -366,7 +366,6 @@ void gen_x86();
 void gen_gvars();
 void gen_func(Function *fn);
 void gen(Node *node);
-
 
 /* glblcodegen.c
   グローバル変数の初期化式を解析

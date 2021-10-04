@@ -81,6 +81,8 @@ Size size(Type *ty)
     return SIZE_PTR;
   case TY_ARRAY:
     return (ty->array_size) * size(ty->ptr_to);
+  case TY_STRUCT:
+    return 0;
   default:
     error("サイズが定義されていません");
   }

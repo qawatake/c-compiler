@@ -8,6 +8,7 @@ static Type *ptr(Var *var);
 static Type *seq(Var *var);
 static Type *ident(Var *var);
 static Type *root();
+static Type *strct();
 
 bool assr(Var *var)
 {
@@ -147,5 +148,19 @@ Type *root()
     ty->kind = TY_CHAR;
     ty->ptr_to = NULL;
   }
+  else if (consume("struct"))
+  {
+    ty = strct();
+  }
+  return ty;
+}
+
+Type *strct()
+{
+  Type *ty = calloc(1, sizeof(Type));
+  ty->kind = TY_STRUCT;
+  ty->ptr_to = NULL;
+  expect("{");
+  expect("}");
   return ty;
 }
