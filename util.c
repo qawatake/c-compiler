@@ -204,6 +204,9 @@ void type_tree(Type *ty)
   case TY_ARRAY:
     tkind = "TY_ARRAY";
     break;
+  case TY_STRUCT:
+    tkind = "TY_STRUCT";
+    break;
   default:
     error("デバッグ: '%d' は登録されていない TypeKind です", ty->kind);
   }

@@ -69,6 +69,16 @@ Type *tyjoin(Type *lty, Type *rty)
 
 Size size(Type *ty)
 {
+  if (ty->kind == TY_STRUCT)
+  {
+    int totalsize = 0;
+    for (int id = 0; ty->members[id]; id++)
+    {
+      totalsize += size(ty->members[id]);
+    }
+    return totalsize;
+  }
+
   switch (ty->kind)
   {
   case TY_INT_LITERAL:
@@ -81,8 +91,6 @@ Size size(Type *ty)
     return SIZE_PTR;
   case TY_ARRAY:
     return (ty->array_size) * size(ty->ptr_to);
-  case TY_STRUCT:
-    return 0;
   default:
     error("サイズが定義されていません");
   }

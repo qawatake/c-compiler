@@ -53,6 +53,8 @@ void palloc2(int ***q, int a, int b)
 EOF
 
 assert 0 "int main(){struct {} x; return sizeof x;}"
+assert 4 "int main(){struct {int a;} x; return sizeof x;}"
+
 assert 0 "int main(){0;}"
 assert 42 "int main(){42;}"
 assert 21 "int main(){5+20-4;}"

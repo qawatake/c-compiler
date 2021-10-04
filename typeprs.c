@@ -161,6 +161,26 @@ Type *strct()
   ty->kind = TY_STRUCT;
   ty->ptr_to = NULL;
   expect("{");
-  expect("}");
+  int size = 10;
+  Type **members = malloc(10 * sizeof(Type));
+  int id = 0;
+  for (;;)
+  {
+    if (consume("}"))
+      break;
+
+    Var var;
+    assr(&var);
+    expect(";");
+    members[id] = var.type;
+    id++;
+    if (id >= size)
+    {
+      size *= 2;
+      members = realloc(members, size);
+    }
+  }
+  members[id] = NULL;
+  ty->members = members;
   return ty;
 }
