@@ -68,7 +68,9 @@ struct Type
   Type *ptr_to;     // ~ 型へのポインタ
   int array_size;   // 配列の要素数 (未設定の場合は -1)
   Type **members;   // kind が TY_STRUCT の場合に使う. メンバ要素の可変長配列
-  int offset;       // kind が TY_STRUCT の場合に使う. メンバ要素のオフセット
+  int offset;       // 構造体のメンバの場合に使う. 構造体内のオフセット
+  char *name;       // 構造体のメンバの場合に使う
+  int len;          // 構造体のメンバの場合に使う
 };
 
 // 変数の共通要素
@@ -103,6 +105,7 @@ typedef enum
   ND_FOR,       // for
   ND_ADDR,      // &x
   ND_DEREF,     // *x
+  ND_DOT,       // x.a
   ND_FUNC,      // 関数定義
   ND_LVAR,      // ローカル変数
   ND_GVAR,      // グローバル変数

@@ -174,6 +174,9 @@ Type *strct()
     assr(&var);
     expect(";");
     members[id] = var.type;
+    members[id]->name = var.name;
+    members[id]->len = var.len;
+
 
     offset += (size(members[id]) + offset) % size(members[id]) ?size(members[id]) - (size(members[id]) + offset) % size(members[id]) : 0;
     members[id]->offset = offset;

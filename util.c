@@ -126,6 +126,9 @@ void syntax_tree(int depth, Node *node)
   case ND_DEREF:
     ndkind = "*X";
     break;
+  case ND_DOT:
+    ndkind = "X.A";
+    break;
   case ND_FUNC:
     ndkind = "FUNC";
     break;
@@ -154,12 +157,13 @@ void syntax_tree(int depth, Node *node)
   }
 
   printf("|- %s: ", ndkind);
-  if (node->kind == ND_LVAR || node->kind == ND_GVAR || node->kind == ND_CALL)
+  if (node->kind == ND_LVAR || node->kind == ND_GVAR || node->kind == ND_CALL || node->kind == ND_DOT)
     strprint(node->name, node->len);
+
   if (node->kind == ND_NUM)
     printf("%d", node->val);
 
-  if (node->kind == ND_LVAR || node->kind == ND_CALL || node->kind == ND_GVAR || node->kind == ND_ARRAY)
+  if (node->kind == ND_LVAR || node->kind == ND_CALL || node->kind == ND_GVAR || node->kind == ND_ARRAY || node->kind == ND_DOT)
   {
     printf(" ");
     if (node->type != NULL)

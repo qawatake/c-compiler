@@ -19,6 +19,12 @@ void gen_lval(Node *node)
   case ND_DEREF:
     gen(node->lhs);
     break;
+  case ND_DOT:
+    gen_lval(node->lhs);
+    printf("  pop rax\n");
+    printf("  add rax, %d\n", node->type->offset);
+    printf("  push rax\n");
+    break;
   default:
     error("代入の左辺値が変数あるいは*変数ではありません");
   }
@@ -196,6 +202,24 @@ void gen(Node *node)
     if (node->type->kind == TY_ARRAY)
       return;
 
+    printf("  pop rax\n");
+    switch (node->type->kind)
+    {
+    case TY_CHAR:
+      printf("  movsx eax, byte ptr [rax]\n");
+      break;
+    case TY_INT_LITERAL:
+    case TY_INT:
+      printf("  mov eax, [rax]\n");
+      break;
+    case TY_PTR:
+      printf("  mov rax, [rax]\n");
+      break;
+    }
+    printf("  push rax\n");
+    return;
+  case ND_DOT:
+    gen_lval(node);
     printf("  pop rax\n");
     switch (node->type->kind)
     {

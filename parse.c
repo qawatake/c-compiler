@@ -691,6 +691,25 @@ Function *find_func(Token *tok)
   return NULL;
 }
 
+Node *new_node_member(Node *parent, Token *tok)
+{
+  Node *node = new_node(ND_DOT, parent, NULL);
+  node->name = tok->str;
+  node->len = tok->len;
+
+  Type *strct = parent->type;
+  for (int id = 0; strct->members[id]; id++)
+  {
+    Type *mem = strct->members[id];
+    if (mem->len == tok->len && !memcmp(mem->name, tok->str, tok->len))
+    {
+      node->type = mem;
+      return node;
+    }
+  }
+  error("構造体のメンバにアクセスできませんでした");
+}
+
 Node *comp()
 {
   Node *node = primary();
@@ -706,6 +725,11 @@ Node *comp()
       node->type = ty;
       node = new_node(ND_DEREF, node, NULL);
       node->type = ty->ptr_to;
+    }
+    else if (consume("."))
+    {
+      Token *tok = consume_ident();
+      node = new_node_member(node, tok);
     }
     else
     {
