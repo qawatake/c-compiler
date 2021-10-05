@@ -61,6 +61,7 @@ assert 8 "int main(){struct{char a; int b;} x; x.a = 3; x.b = 5; return x.a + x.
 assert 11 "int main(){struct{struct{char a;} b; int c;} x; x.b.a = 1; x.c = 2; return x.b.a + x.c + sizeof x;}"
 assert 11 "struct{struct{char a;} b; int c;} x; int main(){x.b.a = 1; x.c = 2; return x.b.a + x.c + sizeof x;}"
 assert 8 "int main(){struct{char a[3]; int b;} x; x.a[0] = 1; x.a[2] = 3; x.b = 4; return x.a[0] + x.a[2] + x.b;}"
+assert 8 "int main(){struct { char a; int b; } x; struct { char a; int b; } *p = &x; x.a=3; x.b=5; return p->a+p->b;}"
 
 assert 0 "int main(){0;}"
 assert 42 "int main(){42;}"

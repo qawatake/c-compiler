@@ -731,6 +731,14 @@ Node *comp()
       Token *tok = consume_ident();
       node = new_node_member(node, tok);
     }
+    else if (consume("->"))
+    {
+      Token *tok = consume_ident();
+      Type *ty = node->type;
+      node = new_node(ND_DEREF, node, NULL);
+      node->type = ty->ptr_to;
+      node = new_node_member(node, tok);
+    }
     else
     {
       return node;
