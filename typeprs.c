@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "9cc.h"
 
 static Type *derv(Var *var);
@@ -155,11 +156,43 @@ Type *root()
   return ty;
 }
 
+static Tag *find_tag(char *name, int len)
+{
+  Tag *cur = scope->tags;
+  while (cur)
+  {
+    if (cur->len == len && !memcmp(name, cur->name, len))
+      return cur;
+    cur = cur->next;
+  }
+  return NULL;
+}
+
 Type *strct()
 {
   Type *ty = calloc(1, sizeof(Type));
   ty->kind = TY_STRUCT;
   ty->ptr_to = NULL;
+
+  Token *tok = consume_ident();
+  if (tok)
+  {
+    Tag *tag = find_tag(tok->str, tok->len);
+    if (tag)
+    {
+      return tag->type;
+    }
+    else
+    {
+      tag = calloc(1, sizeof(Tag));
+      tag->name = tok->str;
+      tag->len = tok->len;
+      tag->type = ty;
+      tag->next = scope->tags;
+      scope->tags = tag;
+    }
+  }
+
   expect("{");
   int nmem = 10;
   Type **members = malloc(10 * sizeof(Type));

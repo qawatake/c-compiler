@@ -173,11 +173,21 @@ struct Function
   int offset;   // ローカル変数のデータ保持のために必要なメモリ数
 };
 
+typedef struct Tag Tag;
+struct Tag
+{
+  Tag *next; // 登録済みの次の構造体タグ
+  char *name;
+  int len;
+  Type *type; // タグと紐付けられた型
+};
+
 typedef struct Scope Scope;
 struct Scope
 {
   Scope *parent;
   LVar *locals;
+  Tag *tags;
   int offset; // 子スコープで使用された最大のメモリ数
 };
 

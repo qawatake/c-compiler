@@ -26,6 +26,7 @@ int main(int argc, char **argv)
   scope = calloc(1, sizeof(Scope));
   scope->parent = NULL;
   scope->locals = NULL;
+  scope->tags = NULL;
   scope->offset = 0;
 
   // 文字列の初期化
