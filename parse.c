@@ -251,6 +251,15 @@ GVar *newGVar(Var *var)
   return gvar;
 }
 
+Tydef *newTydef(Var *var)
+{
+  Tydef *tydef = calloc(1, sizeof(Tydef));
+  tydef->name = var->name;
+  tydef->len = var->len;
+  tydef->type = var->type;
+  return tydef;
+}
+
 Node *parse_for_contents()
 {
   Node *node = calloc(1, sizeof(Node));
@@ -400,6 +409,17 @@ Node *stmt()
   else if (consume("return"))
   {
     node = new_node(ND_RETURN, expr(), NULL);
+    expect(";");
+  }
+  else if (consume("typedef"))
+  {
+    Var var;
+    if (!assr(&var))
+      error("typedef の書式に誤りがあります");
+    Tydef *tydef = newTydef(&var);
+    tydef->next = scope->typedefs;
+    scope->typedefs = tydef;
+    node = new_node(ND_NONE, NULL, NULL);
     expect(";");
   }
   else if (consume("if"))

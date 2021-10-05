@@ -7,7 +7,7 @@
 
 bool consume(char *op)
 {
-  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR && token->kind != TK_INT && token->kind != TK_SIZEOF && token->kind != TK_CHAR && token->kind != TK_STRUCT)
+  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR && token->kind != TK_INT && token->kind != TK_SIZEOF && token->kind != TK_CHAR && token->kind != TK_STRUCT && token->kind != TK_TYPEDEF)
     return false;
   else if (token->len != strlen(op) || memcmp(token->str, op, token->len))
     return false;
@@ -46,6 +46,21 @@ bool consume_num(int *num)
   *num = token->val;
   token = token->next;
   return true;
+}
+
+Tydef *consume_typedefs()
+{
+  Tydef *cur = scope->typedefs;
+  while (cur)
+  {
+    if (cur->len == token->len && !memcmp(token->str, cur->name, token->len))
+    {
+      token = token->next;
+      return cur;
+    }
+    cur = cur->next;
+  }
+  return NULL;
 }
 
 bool check(char *op)
@@ -258,6 +273,13 @@ Token *tokenize(char *p)
     {
       cur = new_token(TK_STRUCT, cur, p, 6);
       p += 6;
+      continue;
+    }
+
+    if (strncmp(p, "typedef", 7) == 0 && !is_alnum(p[7]))
+    {
+      cur = new_token(TK_TYPEDEF, cur, p, 7);
+      p += 7;
       continue;
     }
 

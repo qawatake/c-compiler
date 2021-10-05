@@ -17,6 +17,7 @@ typedef enum
   TK_CHAR,     // char
   TK_SIZEOF,   // sizeof
   TK_STRUCT,   // struct
+  TK_TYPEDEF,  // typedef
   TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
   TK_STR,      // 文字列トークン
@@ -182,12 +183,22 @@ struct Tag
   Type *type; // タグと紐付けられた型
 };
 
+typedef struct Tydef Tydef;
+struct Tydef
+{
+  Tydef *next; // 登録済みの次の typedef
+  char *name;
+  int len;
+  Type *type; // タグと紐付けられた型
+};
+
 typedef struct Scope Scope;
 struct Scope
 {
   Scope *parent;
   LVar *locals;
   Tag *tags;
+  Tydef *typedefs;
   int offset; // 子スコープで使用された最大のメモリ数
 };
 
@@ -263,6 +274,10 @@ bool consume_num(int *num);
 // それ以外の場合には偽を返す
 // いずれの場合もトークンは進めない
 bool check(char *op);
+
+// 次のトークンが typedef された型であれば, トークンを1つ進めて, 該当する Tydef * を返す
+// それ以外の場合には NULL を返す
+Tydef *consume_typedefs();
 
 // 次のトークンが期待している記号のときには, トークンを1つ進める
 // それ以外の場合にはエラーを報告する

@@ -153,6 +153,15 @@ Type *root()
   {
     ty = strct();
   }
+  else
+  {
+    Tydef *tydef = consume_typedefs();
+    if (tydef)
+    {
+      ty = tydef->type;
+    }
+  }
+
   return ty;
 }
 
@@ -210,8 +219,7 @@ Type *strct()
     members[id]->name = var.name;
     members[id]->len = var.len;
 
-
-    offset += (size(members[id]) + offset) % size(members[id]) ?size(members[id]) - (size(members[id]) + offset) % size(members[id]) : 0;
+    offset += (size(members[id]) + offset) % size(members[id]) ? size(members[id]) - (size(members[id]) + offset) % size(members[id]) : 0;
     members[id]->offset = offset;
     offset += size(members[id]);
 

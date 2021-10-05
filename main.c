@@ -27,6 +27,7 @@ int main(int argc, char **argv)
   scope->parent = NULL;
   scope->locals = NULL;
   scope->tags = NULL;
+  scope->typedefs = NULL;
   scope->offset = 0;
 
   // 文字列の初期化
