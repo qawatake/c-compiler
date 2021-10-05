@@ -255,7 +255,11 @@ void type_tree(Type *ty);
 
 // 次のトークンが期待している記号のときには, トークンを1つ進めて真を返す
 // それ以外の場合には偽を返す
-bool consume(char *op);
+bool consume_reserve(char *op);
+
+// 次のトークンが期待している種類のトークンのときには, トークンを1つ進めて真を返す
+// それ以外の場合には偽を返す
+bool consume(TokenKind kind);
 
 // 次のトークンが識別子のときには, トークンを1つ進めてトークンを返す
 // それ以外の場合には NULL を返す

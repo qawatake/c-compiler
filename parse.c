@@ -265,7 +265,7 @@ Node *parse_for_contents()
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_FOR;
   expect("(");
-  if (consume(";"))
+  if (consume_reserve(";"))
   {
     node->lhs = new_node(ND_NONE, NULL, NULL);
   }
@@ -275,7 +275,7 @@ Node *parse_for_contents()
     expect(";");
   }
 
-  if (consume(";"))
+  if (consume_reserve(";"))
   {
     node->rhs = new_node(ND_WHILE, new_node_num(1), NULL);
   }
@@ -285,7 +285,7 @@ Node *parse_for_contents()
     expect(";");
   }
 
-  if (consume(")"))
+  if (consume_reserve(")"))
   {
     node->rhs->rhs = new_node(ND_COMP_STMT, NULL, NULL);
   }
@@ -305,7 +305,7 @@ int parse_array_literal(Node ***nds)
   int size = 10;
   int id = 0;
   expect("{");
-  if (consume("}"))
+  if (consume_reserve("}"))
   {
     (*nds)[0] = NULL;
     return 0;
@@ -313,7 +313,7 @@ int parse_array_literal(Node ***nds)
 
   (*nds)[id] = assign();
   id++;
-  while (consume(","))
+  while (consume_reserve(","))
   {
     (*nds)[id] = assign();
     id++;
@@ -337,7 +337,7 @@ void program()
   {
     Var var;
     assr(&var);
-    if (consume("("))
+    if (consume_reserve("("))
     {
       Type *rety = var.type;
       Function *fn = calloc(1, sizeof(Function));
@@ -345,7 +345,7 @@ void program()
       fn->retype = rety;
       zoom_in();
 
-      if (!consume(")"))
+      if (!consume_reserve(")"))
       {
         for (;;)
         {
@@ -355,7 +355,7 @@ void program()
           lvar->next = scope->locals;
           lvar->offset = (scope->locals) ? scope->locals->offset + 8 : scope->offset + 8;
           scope->locals = lvar;
-          if (consume(","))
+          if (consume_reserve(","))
             continue;
           expect(")");
           break;
@@ -375,7 +375,7 @@ void program()
       GVar *gvar = newGVar(&var);
       gvar->next = globals;
       globals = gvar;
-      if (consume("="))
+      if (consume_reserve("="))
       {
         gvar->ini = equality();
         if (gvar->type->kind == TY_ARRAY && gvar->ini->type->kind == TY_ARRAY && gvar->type->array_size == -1)
@@ -392,12 +392,12 @@ Node *stmt()
 {
   Node *node;
   Var var;
-  if (consume("{")) // ブロック文
+  if (consume_reserve("{")) // ブロック文
   {
     zoom_in();
     node = new_node(ND_COMP_STMT, NULL, NULL);
     Node *cur = node;
-    while (!consume("}"))
+    while (!consume_reserve("}"))
     {
       cur->lhs = stmt();
       cur->rhs = new_node(ND_COMP_STMT, NULL, NULL);
@@ -406,12 +406,12 @@ Node *stmt()
     cur->kind = ND_NONE;
     zoom_out();
   }
-  else if (consume("return"))
+  else if (consume(TK_RETURN))
   {
     node = new_node(ND_RETURN, expr(), NULL);
     expect(";");
   }
-  else if (consume("typedef"))
+  else if (consume(TK_TYPEDEF))
   {
     Var var;
     if (!assr(&var))
@@ -422,7 +422,7 @@ Node *stmt()
     node = new_node(ND_NONE, NULL, NULL);
     expect(";");
   }
-  else if (consume("if"))
+  else if (consume(TK_IF))
   {
     zoom_in();
     node = calloc(1, sizeof(Node));
@@ -432,7 +432,7 @@ Node *stmt()
     expect(")");
     Node *node_true;
     node_true = stmt();
-    if (consume("else"))
+    if (consume(TK_ELSE))
     {
       Node *node_else = calloc(1, sizeof(Node));
       node_else->kind = ND_ELSE;
@@ -446,7 +446,7 @@ Node *stmt()
     }
     zoom_out();
   }
-  else if (consume("while"))
+  else if (consume(TK_WHILE))
   {
     node = calloc(1, sizeof(Node));
     node->kind = ND_WHILE;
@@ -455,7 +455,7 @@ Node *stmt()
     expect(")");
     node->rhs = stmt();
   }
-  else if (consume("for"))
+  else if (consume(TK_FOR))
   {
     zoom_in();
     node = parse_for_contents();
@@ -477,7 +477,7 @@ Node *expr()
   {
     LVar *lvar = newLVar(&var);
 
-    if (consume("="))
+    if (consume_reserve("="))
     {
       Node *rhs = equality();
       // 右辺の配列の要素数を左辺の配列の要素数として使う
@@ -514,7 +514,7 @@ Node *assign()
 
   for (;;)
   {
-    if (consume("="))
+    if (consume_reserve("="))
     {
       Node *lhs = node;
       Node *rhs = assign();
@@ -533,13 +533,13 @@ Node *equality()
 
   for (;;)
   {
-    if (consume("=="))
+    if (consume_reserve("=="))
     {
       node = new_node(ND_EQ, node, relational());
       node->type = calloc(1, sizeof(Type));
       node->type->kind = TY_INT;
     }
-    else if (consume("!="))
+    else if (consume_reserve("!="))
     {
       node = new_node(ND_NE, node, relational());
       node->type = calloc(1, sizeof(Type));
@@ -558,25 +558,25 @@ Node *relational()
 
   for (;;)
   {
-    if (consume(">"))
+    if (consume_reserve(">"))
     {
       node = new_node(ND_L, add(), node);
       node->type = calloc(1, sizeof(Type));
       node->type->kind = TY_INT;
     }
-    else if (consume("<"))
+    else if (consume_reserve("<"))
     {
       node = new_node(ND_L, node, add());
       node->type = calloc(1, sizeof(Type));
       node->type->kind = TY_INT;
     }
-    else if (consume(">="))
+    else if (consume_reserve(">="))
     {
       node = new_node(ND_LE, add(), node);
       node->type = calloc(1, sizeof(Type));
       node->type->kind = TY_INT;
     }
-    else if (consume("<="))
+    else if (consume_reserve("<="))
     {
       node = new_node(ND_LE, node, add());
       node->type = calloc(1, sizeof(Type));
@@ -595,14 +595,14 @@ Node *add()
 
   for (;;)
   {
-    if (consume("+"))
+    if (consume_reserve("+"))
     {
       Node *rhs = mul();
       Type *ty = tyjoin(node->type, rhs->type);
       node = new_node(ND_ADD, node, rhs);
       node->type = ty;
     }
-    else if (consume("-"))
+    else if (consume_reserve("-"))
     {
       Node *rhs = mul();
       Type *ty = tyjoin(node->type, rhs->type);
@@ -622,14 +622,14 @@ Node *mul()
 
   for (;;)
   {
-    if (consume("*"))
+    if (consume_reserve("*"))
     {
       Node *rhs = unary();
       Type *ty = tyjoin(node->type, rhs->type);
       node = new_node(ND_MUL, node, rhs);
       node->type = ty;
     }
-    else if (consume("/"))
+    else if (consume_reserve("/"))
     {
       Node *rhs = unary();
       Type *ty = tyjoin(node->type, rhs->type);
@@ -645,18 +645,18 @@ Node *mul()
 
 Node *unary()
 {
-  if (consume("-"))
+  if (consume_reserve("-"))
   {
     Node *rhs = unary();
     Node *node = new_node(ND_SUB, new_node_num(0), rhs);
     node->type = rhs->type;
     return node;
   }
-  if (consume("+"))
+  if (consume_reserve("+"))
   {
     return unary();
   }
-  if (consume("&"))
+  if (consume_reserve("&"))
   {
     Node *lhs = unary();
     Node *node = new_node(ND_ADDR, lhs, NULL);
@@ -665,14 +665,14 @@ Node *unary()
     node->type->ptr_to = lhs->type;
     return node;
   }
-  if (consume("*"))
+  if (consume_reserve("*"))
   {
     Node *lhs = unary();
     Node *node = new_node(ND_DEREF, lhs, NULL);
     node->type = lhs->type->ptr_to;
     return node;
   }
-  if (consume("sizeof"))
+  if (consume(TK_SIZEOF))
   {
     Node *child = unary();
     return new_node_num(size(child->type));
@@ -684,13 +684,13 @@ Node *parse_func_args()
 {
   Node *node;
   Node *cur;
-  if (consume(")"))
+  if (consume_reserve(")"))
   {
     return NULL;
   }
   node = new_node(ND_EXPR_STMT, NULL, expr());
   cur = node;
-  while (!consume(")"))
+  while (!consume_reserve(")"))
   {
     expect(",");
     cur->lhs = new_node(ND_EXPR_STMT, NULL, expr());
@@ -736,7 +736,7 @@ Node *comp()
 
   for (;;)
   {
-    if (consume("["))
+    if (consume_reserve("["))
     {
       Node *inside = assign();
       expect("]");
@@ -746,12 +746,12 @@ Node *comp()
       node = new_node(ND_DEREF, node, NULL);
       node->type = ty->ptr_to;
     }
-    else if (consume("."))
+    else if (consume_reserve("."))
     {
       Token *tok = consume_ident();
       node = new_node_member(node, tok);
     }
-    else if (consume("->"))
+    else if (consume_reserve("->"))
     {
       Token *tok = consume_ident();
       Type *ty = node->type;
@@ -769,7 +769,7 @@ Node *comp()
 Node *primary()
 {
   // 次のトークンが "(" なら, "(" expr ")" のはず
-  if (consume("("))
+  if (consume_reserve("("))
   {
     Node *node = expr();
     expect(")");
@@ -779,7 +779,7 @@ Node *primary()
   Token *tok = consume_ident();
   if (tok)
   {
-    if (consume("("))
+    if (consume_reserve("("))
     {
       Node *node = calloc(1, sizeof(Node));
       Function *fn = find_func(tok);

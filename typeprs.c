@@ -43,7 +43,7 @@ Type *derv(Var *var)
 Type *ptr(Var *var)
 {
   Type *parent = NULL;
-  while (consume("*"))
+  while (consume_reserve("*"))
   {
     Type *newty = calloc(1, sizeof(Type));
     newty->kind = TY_PTR;
@@ -80,7 +80,7 @@ Type *seq(Var *var)
     }
   }
 
-  if (consume("["))
+  if (consume_reserve("["))
   {
     Type *newty = calloc(1, sizeof(Type));
     newty->kind = TY_ARRAY;
@@ -103,7 +103,7 @@ Type *seq(Var *var)
     expect("]");
   }
 
-  while (consume("["))
+  while (consume_reserve("["))
   {
     Type *newty = calloc(1, sizeof(Type));
     newty->kind = TY_ARRAY;
@@ -117,7 +117,7 @@ Type *seq(Var *var)
 
 Type *ident(Var *var)
 {
-  if (consume("("))
+  if (consume_reserve("("))
   {
     Type *ty = derv(var);
     expect(")");
@@ -137,19 +137,19 @@ Type *ident(Var *var)
 Type *root()
 {
   Type *ty = NULL;
-  if (consume("int"))
+  if (consume(TK_INT))
   {
     ty = calloc(1, sizeof(Type));
     ty->kind = TY_INT;
     ty->ptr_to = NULL;
   }
-  else if (consume("char"))
+  else if (consume(TK_CHAR))
   {
     ty = calloc(1, sizeof(Type));
     ty->kind = TY_CHAR;
     ty->ptr_to = NULL;
   }
-  else if (consume("struct"))
+  else if (consume(TK_STRUCT))
   {
     ty = strct();
   }
@@ -209,7 +209,7 @@ Type *strct()
   int offset = 0;
   for (;;)
   {
-    if (consume("}"))
+    if (consume_reserve("}"))
       break;
 
     Var var;

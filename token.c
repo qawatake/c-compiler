@@ -5,11 +5,17 @@
 #include <ctype.h>
 #include "9cc.h"
 
-bool consume(char *op)
+bool consume_reserve(char *op)
 {
-  if (token->kind != TK_RESERVED && token->kind != TK_RETURN && token->kind != TK_IF && token->kind != TK_ELSE && token->kind != TK_WHILE && token->kind != TK_FOR && token->kind != TK_INT && token->kind != TK_SIZEOF && token->kind != TK_CHAR && token->kind != TK_STRUCT && token->kind != TK_TYPEDEF)
+  if (token->kind != TK_RESERVED || token->len != strlen(op) || memcmp(token->str, op, token->len))
     return false;
-  else if (token->len != strlen(op) || memcmp(token->str, op, token->len))
+  token = token->next;
+  return true;
+}
+
+bool consume(TokenKind kind)
+{
+  if (token->kind != kind)
     return false;
   token = token->next;
   return true;
