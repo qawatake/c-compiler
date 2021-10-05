@@ -151,16 +151,6 @@ struct GVar
   char *name; // 変数名
   int len;    // 変数名の長さ
   Type *type; // 変数の型
-  // enum
-  // {
-  //   INI_INT,   // int, char
-  //   INI_ADDR,  // アドレス
-  //   INI_STR,   // 文字列
-  // } IniType;   // 初期値の種類
-  // int val;     // 初期値: type が TY_INT, TY_CHAR のときのみ使用
-  // int serial;  // 初期値: type が TY_STR のときのみ使用
-  // char *label; // 初期値: アセンブリでアドレスを表す識別子. type が TY_PTR のときのみ使用
-  // int labelen; // 初期値: アセンブリでアドレスを表す識別子の長さ. type が TY_PTR のときのみ使用
   Node *ini; // 初期値
 };
 
@@ -337,23 +327,6 @@ Size size(Type *ty);
 // 現在までに登録された文字列の総数
 int count_strings();
 
-// ローカル変数を変数名で検索する
-// 見つからなかった場合は NULL を返す
-LVar *find_lvar(Token *tok);
-
-// グローバル変数を変数名検索する
-// 見つからなかった場合はNULLを返す
-GVar *find_gvar(char *name, int len);
-
-// 関数を名前で検索する
-// 見つからなかった場合はNULLを返す
-Function *find_func(Token *tok);
-
-// 1つ下のスコープに入る
-void zoom_in();
-// 現在のスコープを抜ける
-void zoom_out();
-
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 Node *parse_for_contents();
@@ -407,5 +380,43 @@ void gen(Node *node);
 // グローバル変数の初期化式を解析
 // アセンブリでの変数宣言のうち, 内容部分 (インデントされた部分) を出力する
 void gen_gvar(Type *ty, Node *ini);
+
+
+/* global.c
+  globals, scope, funcs といったグローバル変数へのインタフェースを提供
+*/
+
+// 追加系
+// ローカル変数を追加
+void add_locals(LVar *lvar);
+// グローバル変数を追加
+void add_globals(GVar *gvar);
+// typedef を追加
+void add_typedef(Tydef *tydef);
+// 構造体タグを追加
+void add_tag(Tag *tag);
+
+// 検索系
+// ローカル変数を変数名で検索する
+// 見つからなかった場合は NULL を返す
+LVar *find_lvar(Token *tok);
+
+// グローバル変数を変数名検索する
+// 見つからなかった場合は NULL を返す
+GVar *find_gvar(char *name, int len);
+
+// 関数を名前で検索する
+// 見つからなかった場合は NULL を返す
+Function *find_func(Token *tok);
+
+// 構造体タグを検索
+// 見つからなかった場合は NULL を返す
+Tag *find_tag(char *name, int len);
+
+// スコープの移動
+// 1つ下のスコープに入る
+void zoom_in();
+// 現在のスコープを抜ける
+void zoom_out();
 
 #endif

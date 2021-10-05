@@ -117,62 +117,6 @@ int count_strings()
   return i;
 }
 
-LVar *find_lvar(Token *tok)
-{
-  Scope *cur = scope;
-
-  while (cur)
-  {
-    LVar *var = cur->locals;
-    while (var)
-    {
-      if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
-      {
-        return var;
-      }
-      var = var->next;
-    }
-    cur = cur->parent;
-  }
-  return NULL;
-}
-
-GVar *find_gvar(char *name, int len)
-{
-  GVar *var = globals;
-  while (var)
-  {
-    if (var->len == len && !memcmp(name, var->name, var->len))
-      return var;
-    var = var->next;
-  }
-  return NULL;
-}
-
-void zoom_in()
-{
-  Scope *child = calloc(1, sizeof(Scope));
-  child->parent = scope;
-  child->locals = NULL;
-  child->offset = (scope->locals) ? scope->locals->offset : scope->offset;
-  scope = child;
-}
-
-void zoom_out()
-{
-  Scope *cur = scope;
-  int loffset = (scope->locals) ? scope->locals->offset : 0;
-  scope->parent->offset = (loffset + scope->offset >= scope->parent->offset) ? (loffset + scope->offset) : scope->parent->offset; // 子スコープのうち最大の使用メモリ数に更新
-  while (cur->locals != NULL)
-  {
-    LVar *next = cur->locals->next;
-    free(cur->locals);
-    cur->locals = next;
-  }
-  scope = scope->parent;
-  free(cur);
-}
-
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
   Node *node = calloc(1, sizeof(Node));
@@ -355,6 +299,7 @@ void program()
           lvar->next = scope->locals;
           lvar->offset = (scope->locals) ? scope->locals->offset + 8 : scope->offset + 8;
           scope->locals = lvar;
+          // add_locals(lvar);
           if (consume_reserve(","))
             continue;
           expect(")");
@@ -417,8 +362,7 @@ Node *stmt()
     if (!assr(&var))
       error("typedef の書式に誤りがあります");
     Tydef *tydef = newTydef(&var);
-    tydef->next = scope->typedefs;
-    scope->typedefs = tydef;
+    add_typedef(tydef);
     node = new_node(ND_NONE, NULL, NULL);
     expect(";");
   }
@@ -487,9 +431,7 @@ Node *expr()
         lvar->type->array_size = rhs->type->array_size;
       }
 
-      lvar->next = scope->locals;
-      lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
-      scope->locals = lvar;
+      add_locals(lvar);
 
       Node *lhs = new_node_lvar(lvar);
       node = new_node(ND_ASSIGN, lhs, rhs);
@@ -497,9 +439,7 @@ Node *expr()
     }
     else
     {
-      lvar->next = scope->locals;
-      lvar->offset = (scope->locals) ? scope->locals->offset + size(lvar->type) : scope->offset + size(lvar->type);
-      scope->locals = lvar;
+      add_locals(lvar);
 
       node = new_node(ND_NONE, NULL, NULL);
     }
@@ -699,17 +639,17 @@ Node *parse_func_args()
   return node;
 }
 
-Function *find_func(Token *tok)
-{
-  Function *cur = funcs;
-  while (cur)
-  {
-    if (strlen(cur->name) == tok->len && !memcmp(tok->str, cur->name, tok->len))
-      return cur;
-    cur = cur->next;
-  }
-  return NULL;
-}
+// Function *find_func(Token *tok)
+// {
+//   Function *cur = funcs;
+//   while (cur)
+//   {
+//     if (strlen(cur->name) == tok->len && !memcmp(tok->str, cur->name, tok->len))
+//       return cur;
+//     cur = cur->next;
+//   }
+//   return NULL;
+// }
 
 Node *new_node_member(Node *parent, Token *tok)
 {

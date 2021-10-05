@@ -165,18 +165,6 @@ Type *root()
   return ty;
 }
 
-static Tag *find_tag(char *name, int len)
-{
-  Tag *cur = scope->tags;
-  while (cur)
-  {
-    if (cur->len == len && !memcmp(name, cur->name, len))
-      return cur;
-    cur = cur->next;
-  }
-  return NULL;
-}
-
 Type *strct()
 {
   Type *ty = calloc(1, sizeof(Type));
@@ -197,8 +185,7 @@ Type *strct()
       tag->name = tok->str;
       tag->len = tok->len;
       tag->type = ty;
-      tag->next = scope->tags;
-      scope->tags = tag;
+      add_tag(tag);
     }
   }
 
