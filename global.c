@@ -2,10 +2,23 @@
 #include <stdlib.h>
 #include "9cc.h"
 
+// ローカル変数を保持するために使用しているスタックのオフセット数を返す
+static int offset()
+{
+  Scope *cur = scope;
+  while (cur)
+  {
+    if (cur->locals)
+      return cur->locals->offset;
+    cur = cur->parent;
+  }
+  return 0;
+}
+
 void add_locals(LVar *lvar)
 {
   lvar->next = scope->locals;
-  lvar->offset = ((scope->locals) ? scope->locals->offset : scope->offset) + size(lvar->type);
+  lvar->offset = offset() + size(lvar->type);
   scope->locals = lvar;
 }
 
@@ -153,15 +166,14 @@ void zoom_in()
   Scope *child = calloc(1, sizeof(Scope));
   child->parent = scope;
   child->locals = NULL;
-  child->offset = (scope->locals) ? scope->locals->offset : scope->offset;
   scope = child;
 }
 
 void zoom_out()
 {
   Scope *cur = scope;
-  int loffset = (scope->locals) ? scope->locals->offset : 0;
-  scope->parent->offset = (loffset + scope->offset >= scope->parent->offset) ? (loffset + scope->offset) : scope->parent->offset; // 子スコープのうち最大の使用メモリ数に更新
+  int loffset = (offset() >= scope->offset) ? offset() : scope->offset;
+  scope->parent->offset = (loffset >= scope->parent->offset) ? loffset : scope->parent->offset; // 子スコープのうち最大の使用オフセット数に更新
   while (cur->locals != NULL)
   {
     LVar *next = cur->locals->next;
