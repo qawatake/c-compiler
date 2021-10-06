@@ -105,18 +105,6 @@ Size size(Type *ty)
   }
 }
 
-int count_strings()
-{
-  int i = 0;
-  String *cur = strings;
-  while (cur)
-  {
-    i++;
-    cur = cur->next;
-  }
-  return i;
-}
-
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
   Node *node = calloc(1, sizeof(Node));
@@ -204,6 +192,14 @@ Tydef *newTydef(Var *var)
   return tydef;
 }
 
+Function *newFunction(Var *var)
+{
+  Function *fn = calloc(1, sizeof(Function));
+  fn->name = duplicate(var->name, var->len);
+  fn->retype = var->type;
+  return fn;
+}
+
 Node *parse_for_contents()
 {
   Node *node = calloc(1, sizeof(Node));
@@ -274,19 +270,12 @@ int parse_array_literal(Node ***nds)
 
 void program()
 {
-  funcs = NULL;
-  globals = NULL;
-
   while (!at_eof())
   {
     Var var;
     assr(&var);
     if (consume_reserve("("))
     {
-      Type *rety = var.type;
-      Function *fn = calloc(1, sizeof(Function));
-      fn->name = duplicate(var.name, var.len);
-      fn->retype = rety;
       zoom_in();
 
       if (!consume_reserve(")"))
@@ -296,10 +285,7 @@ void program()
           Var var;
           assr(&var);
           LVar *lvar = newLVar(&var);
-          lvar->next = scope->locals;
-          lvar->offset = (scope->locals) ? scope->locals->offset + 8 : scope->offset + 8;
-          scope->locals = lvar;
-          // add_locals(lvar);
+          add_locals(lvar);
           if (consume_reserve(","))
             continue;
           expect(")");
@@ -309,17 +295,16 @@ void program()
       if (!check("{"))
         expect("{");
 
+      Function *fn = newFunction(&var);
+      add_arg(fn);
       fn->body = stmt();
       zoom_out();
-      fn->offset = scope->offset;
-      fn->next = funcs;
-      funcs = fn;
+      add_func(fn);
     }
     else
     {
       GVar *gvar = newGVar(&var);
-      gvar->next = globals;
-      globals = gvar;
+      add_globals(gvar);
       if (consume_reserve("="))
       {
         gvar->ini = equality();
@@ -639,18 +624,6 @@ Node *parse_func_args()
   return node;
 }
 
-// Function *find_func(Token *tok)
-// {
-//   Function *cur = funcs;
-//   while (cur)
-//   {
-//     if (strlen(cur->name) == tok->len && !memcmp(tok->str, cur->name, tok->len))
-//       return cur;
-//     cur = cur->next;
-//   }
-//   return NULL;
-// }
-
 Node *new_node_member(Node *parent, Token *tok)
 {
   Node *node = new_node(ND_DOT, parent, NULL);
@@ -752,8 +725,7 @@ Node *primary()
   if (str)
   {
     Node *node = new_node_str(str);
-    str->next = strings;
-    strings = str;
+    add_str(str);
     return node;
   }
 

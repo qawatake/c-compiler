@@ -27,6 +27,39 @@ void add_tag(Tag *tag)
   scope->tags = tag;
 }
 
+void add_str(String *str)
+{
+  str->next = strings;
+  strings = str;
+}
+
+void add_func(Function *fn)
+{
+  fn->offset = scope->offset;
+  fn->next = funcs;
+  funcs = fn;
+}
+
+void add_arg(Function *fn)
+{
+  LVar *cur = scope->locals;
+  while (cur)
+  {
+    LVar *arg = calloc(1, sizeof(LVar));
+    arg->name = cur->name;
+    arg->len = cur->len;
+    arg->type = cur->type;
+    arg->offset = cur->offset;
+
+    // ローカル変数は LIFO, つまり, 最新のものが先頭に配置されている
+    // 関数の引数は FIFO である必要があるので, 順番を入れ替えて配置している
+    arg->next = fn->arg;
+    fn->arg = arg;
+
+    cur = cur->next;
+  }
+}
+
 LVar *find_lvar(Token *tok)
 {
   Scope *cur = scope;
@@ -71,6 +104,18 @@ Function *find_func(Token *tok)
   return NULL;
 }
 
+String *find_str(int serial)
+{
+  String *cur = strings;
+  while (cur)
+  {
+    if (cur->serial == serial)
+      return cur;
+    cur = cur->next;
+  }
+  return NULL;
+}
+
 Tag *find_tag(char *name, int len)
 {
   Scope *cur = scope;
@@ -89,6 +134,18 @@ Tag *find_tag(char *name, int len)
     cur = cur->parent;
   }
   return NULL;
+}
+
+int count_strings()
+{
+  int i = 0;
+  String *cur = strings;
+  while (cur)
+  {
+    i++;
+    cur = cur->next;
+  }
+  return i;
 }
 
 void zoom_in()

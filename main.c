@@ -33,6 +33,12 @@ int main(int argc, char **argv)
   // 文字列の初期化
   strings = NULL;
 
+  // 関数の初期化
+  funcs = NULL;
+
+  // グローバル変数の初期化
+  globals = NULL;
+
   // パース
   program();
 

@@ -2,17 +2,17 @@
 #include <stdio.h>
 #include "9cc.h"
 
-String *find_str(int serial)
-{
-  String *cur = strings;
-  while (cur)
-  {
-    if (cur->serial == serial)
-      return cur;
-    cur = cur->next;
-  }
-  return NULL;
-}
+// String *find_str(int serial)
+// {
+//   String *cur = strings;
+//   while (cur)
+//   {
+//     if (cur->serial == serial)
+//       return cur;
+//     cur = cur->next;
+//   }
+//   return NULL;
+// }
 
 static void str_to_array(Type *ty, Node **pnode)
 {

@@ -151,7 +151,7 @@ struct GVar
   char *name; // 変数名
   int len;    // 変数名の長さ
   Type *type; // 変数の型
-  Node *ini; // 初期値
+  Node *ini;  // 初期値
 };
 
 typedef struct Function Function;
@@ -162,6 +162,7 @@ struct Function
   Node *body;
   Type *retype; // 返り値の型
   int offset;   // ローカル変数のデータ保持のために必要なメモリ数
+  LVar *arg;    // 引数の連結リスト
 };
 
 typedef struct Tag Tag;
@@ -191,6 +192,15 @@ struct Scope
   Tydef *typedefs;
   int offset; // 子スコープで使用された最大のメモリ数
 };
+
+typedef enum {
+  REG_RDI,
+  REG_RSI,
+  REG_RDX,
+  REG_RCX,
+  REG_R8,
+  REG_R9,
+} RegKind;
 
 /* グローバル変数の宣言 */
 
@@ -381,7 +391,6 @@ void gen(Node *node);
 // アセンブリでの変数宣言のうち, 内容部分 (インデントされた部分) を出力する
 void gen_gvar(Type *ty, Node *ini);
 
-
 /* global.c
   globals, scope, funcs といったグローバル変数へのインタフェースを提供
 */
@@ -395,6 +404,12 @@ void add_globals(GVar *gvar);
 void add_typedef(Tydef *tydef);
 // 構造体タグを追加
 void add_tag(Tag *tag);
+// 文字列を追加
+void add_str(String *str);
+// 関数を追加
+void add_func(Function *fn);
+// 現在のスコープに登録されているローカル変数を関数の引数として登録する
+void add_arg(Function *fn);
 
 // 検索系
 // ローカル変数を変数名で検索する
@@ -412,6 +427,13 @@ Function *find_func(Token *tok);
 // 構造体タグを検索
 // 見つからなかった場合は NULL を返す
 Tag *find_tag(char *name, int len);
+
+// serial を使って文字列を検索
+// 見つからなかった場合は NULL を返す
+String *find_str(int serial);
+
+// これまでに登録された文字列の数を返す
+int count_strings();
 
 // スコープの移動
 // 1つ下のスコープに入る

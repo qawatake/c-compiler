@@ -1,6 +1,36 @@
 #include <stdio.h>
 #include "9cc.h"
 
+static char *reg_str(RegKind kind, Size s)
+{
+  int size_id;
+  switch (s)
+  {
+  case SIZE_CHAR:
+    size_id = 2;
+    break;
+  case SIZE_INT:
+    size_id = 1;
+    break;
+  case SIZE_PTR:
+    size_id = 0;
+    break;
+  default:
+    error("不適切なレジスタを使用しようとしています");
+  }
+
+  char *regs[][3] = {
+      {"rdi", "edi", "dil"},
+      {"rsi", "esi", "sil"},
+      {"rdx", "edx", "dl"},
+      {"rcx", "ecx", "cl"},
+      {"r8", "r8d", "r8b"},
+      {"r9", "r9d", "r9b"},
+  };
+
+  return regs[kind][size_id];
+}
+
 void gen_lval(Node *node)
 {
   switch (node->kind)
@@ -150,12 +180,15 @@ void gen_func(Function *fn)
   printf("  mov rbp, rsp\n");
   printf("  sub rsp, %d\n", fn->offset);
 
-  char *reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-  for (int i = 0; i < 6; i++)
+  LVar *arg = fn->arg;
+  int id = 0;
+  while (arg)
   {
     printf("  mov rax, rbp\n");
-    printf("  sub rax, %d\n", 8 * (i + 1));
-    printf("  mov [rax], %s\n", reg[i]);
+    printf("  sub rax, %d\n", arg->offset);
+    printf("  mov [rax], %s\n", reg_str(id, size(arg->type)));
+    id++;
+    arg = arg->next;
   }
 
   gen(fn->body);
