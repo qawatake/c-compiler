@@ -5,62 +5,6 @@
 #include <string.h>
 #include "9cc.h"
 
-Type *tyjoin(Type *lty, Type *rty)
-{
-  if (lty->kind > rty->kind)
-    return tyjoin(rty, lty);
-
-  if (rty->kind == TY_ARRAY)
-  {
-    Type *newty = calloc(1, sizeof(Type));
-    newty->kind = TY_PTR;
-    newty->ptr_to = rty->ptr_to;
-    return newty;
-  }
-  else
-  {
-    return rty;
-  }
-}
-
-Size size(Type *ty)
-{
-  if (ty->kind == TY_STRUCT)
-  {
-    int totalsize = 0;
-    int max_mem_size = 0;
-    int id = 0;
-    while (ty->members[id])
-    {
-      if (size(ty->members[id]) > max_mem_size)
-        max_mem_size = size(ty->members[id]);
-      id++;
-    }
-    if (id)
-    {
-      totalsize = ty->members[id - 1]->offset + size(ty->members[id - 1]);
-      totalsize += (max_mem_size + totalsize) % max_mem_size ? max_mem_size - (max_mem_size + totalsize) % max_mem_size : 0;
-    }
-    return totalsize;
-  }
-
-  switch (ty->kind)
-  {
-  case TY_INT_LITERAL:
-    return SIZE_INT;
-  case TY_INT:
-    return SIZE_INT;
-  case TY_CHAR:
-    return SIZE_CHAR;
-  case TY_PTR:
-    return SIZE_PTR;
-  case TY_ARRAY:
-    return (ty->array_size) * size(ty->ptr_to);
-  default:
-    error("サイズが定義されていません");
-  }
-}
-
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs, Type *ty)
 {
   Node *node = calloc(1, sizeof(Node));

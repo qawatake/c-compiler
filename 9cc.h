@@ -309,6 +309,12 @@ Token *tokenize(char *p);
   型宣言を解析
 */
 
+// 合成したノードの型を返す
+Type *tyjoin(Type *lty, Type *rty);
+
+// sizeof に相当する役割
+Size size(Type *ty);
+
 // 型宣言を解析
 // root: 変数宣言の冒頭の型
 // var: 変数宣言を解析した結果 (name, len, type) を埋め込む
@@ -319,12 +325,6 @@ bool assr(Var *var);
   構文木を生成
   再帰降下構文解析器の実装
 */
-
-// 合成したノードの型を返す
-Type *tyjoin(Type *lty, Type *rty);
-
-// sizeof に相当する役割
-Size size(Type *ty);
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs, Type *ty);
 Node *new_node_num(int val);
