@@ -5,6 +5,10 @@
 #include <string.h>
 #include "9cc.h"
 
+static int array_literal();
+static Node *for_sentence();
+static Node *args();
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs, Type *ty)
 {
   Node *node = calloc(1, sizeof(Node));
@@ -101,7 +105,7 @@ Function *newFunction(Var *var)
   return fn;
 }
 
-Node *parse_for_contents()
+Node *for_sentence()
 {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_FOR;
@@ -140,7 +144,7 @@ Node *parse_for_contents()
   return node;
 }
 
-int parse_array_literal(Node ***nds)
+int array_literal(Node ***nds)
 {
   *nds = malloc(10 * sizeof(Node *));
   int size = 10;
@@ -288,7 +292,7 @@ Node *stmt()
   else if (consume(TK_FOR))
   {
     zoom_in();
-    node = parse_for_contents();
+    node = for_sentence();
     zoom_out();
   }
   else
@@ -488,7 +492,7 @@ Node *unary()
   return comp();
 }
 
-Node *parse_func_args()
+Node *args()
 {
   Node *node;
   Node *cur;
@@ -584,7 +588,7 @@ Node *primary()
         node->type = NULL;
       }
       node->kind = ND_CALL;
-      node->lhs = parse_func_args();
+      node->lhs = args();
       node->name = tok->str;
       node->len = tok->len;
       return node;
@@ -611,7 +615,7 @@ Node *primary()
   if (check("{"))
   {
     Node **elems;
-    int nelem = parse_array_literal(&elems);
+    int nelem = array_literal(&elems);
 
     Type *ty = calloc(1, sizeof(Node));
     ty->kind = TY_ARRAY;
