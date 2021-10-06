@@ -5,66 +5,22 @@
 #include <string.h>
 #include "9cc.h"
 
-int tycmp(Type *lty, Type *rty)
-{
-  if (lty == NULL)
-    return 1;
-  if (rty == NULL)
-    return -1;
-
-  switch (lty->kind)
-  {
-  case TY_CHAR:
-    if (rty->kind == TY_INT_LITERAL)
-      return -1;
-    if (rty->kind == TY_CHAR)
-      return 0;
-    if (rty->kind == TY_INT || rty->kind == TY_ARRAY || rty->kind == TY_PTR)
-      return 1;
-  case TY_INT:
-    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_CHAR)
-      return -1;
-    if (rty->kind == TY_INT)
-      return 0;
-    if (rty->kind == TY_PTR || rty->kind == TY_ARRAY)
-      return 1;
-    error("両辺の型が不整合です");
-  case TY_INT_LITERAL:
-    if (rty->kind == TY_INT_LITERAL)
-      return 0;
-    if (rty->kind == TY_CHAR || rty->kind == TY_INT || rty->kind == TY_PTR || rty->kind == TY_ARRAY)
-      return 1;
-    error("両辺の型が不整合です");
-  case TY_ARRAY:
-    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_CHAR || rty->kind == TY_INT)
-      return -1;
-    if (rty->kind == TY_ARRAY)
-      return 0;
-    if (rty->kind == TY_PTR)
-      return 1;
-  case TY_PTR:
-    if (rty->kind == TY_INT_LITERAL || rty->kind == TY_CHAR || rty->kind == TY_INT || rty->kind == TY_ARRAY)
-      return -1;
-    if (rty->kind == TY_PTR)
-    {
-      return tycmp(lty->ptr_to, rty->ptr_to);
-    }
-    error("両辺の型が不整合です");
-  }
-}
-
 Type *tyjoin(Type *lty, Type *rty)
 {
-  if (tycmp(lty, rty) > 0)
+  if (lty->kind > rty->kind)
     return tyjoin(rty, lty);
 
-  if (lty->kind != TY_ARRAY)
-    return lty;
-
-  Type *newty = calloc(1, sizeof(Type));
-  newty->kind = TY_PTR;
-  newty->ptr_to = lty->ptr_to;
-  return newty;
+  if (rty->kind == TY_ARRAY)
+  {
+    Type *newty = calloc(1, sizeof(Type));
+    newty->kind = TY_PTR;
+    newty->ptr_to = rty->ptr_to;
+    return newty;
+  }
+  else
+  {
+    return rty;
+  }
 }
 
 Size size(Type *ty)

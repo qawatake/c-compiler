@@ -60,8 +60,8 @@ struct Type
   enum
   {
     TY_INT_LITERAL, // 整数リテラル
-    TY_INT,         // int
     TY_CHAR,        // char
+    TY_INT,         // int
     TY_PTR,         // ポインタ
     TY_ARRAY,       // 配列
     TY_STRUCT,      // struct
@@ -320,22 +320,11 @@ bool assr(Var *var);
   再帰降下構文解析器の実装
 */
 
-// ノードの型を比較
-// lty の方が強い型ならば, -1 を返す
-// 同じ型ならば, 0 を返す
-// rty の方が強い方ならば, 1 を返す
-// 型の強さ: 2つの型を2項演算子で結んだときに, 結果の型になるような型を「強い」とする
-// 型の強さの例: TY_INT_LITERAL < TY_INT < TY_INT
-int tycmp(Type *lty, Type *rty);
-
 // 合成したノードの型を返す
 Type *tyjoin(Type *lty, Type *rty);
 
 // sizeof に相当する役割
 Size size(Type *ty);
-
-// 現在までに登録された文字列の総数
-int count_strings();
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
