@@ -2,18 +2,6 @@
 #include <stdio.h>
 #include "9cc.h"
 
-// String *find_str(int serial)
-// {
-//   String *cur = strings;
-//   while (cur)
-//   {
-//     if (cur->serial == serial)
-//       return cur;
-//     cur = cur->next;
-//   }
-//   return NULL;
-// }
-
 static void str_to_array(Type *ty, Node **pnode)
 {
   Node *node = *pnode;
@@ -92,7 +80,7 @@ static void walk_array_expansion(Node **pnode)
     Node **elems = node->rhs->elems;
     int nelem = node->rhs->type->array_size;
 
-    *pnode = new_node(ND_COMP_STMT, NULL, NULL);
+    *pnode = new_node(ND_COMP_STMT, NULL, NULL, NULL);
     node = *pnode;
     Node *cur = *pnode;
     for (int i = 0; i < lnode->type->array_size; i++)
@@ -102,25 +90,20 @@ static void walk_array_expansion(Node **pnode)
       Node *nd;
       Node *lhs = lnode;
       Node *rhs = new_node_num(i);
-      Type *ty = tyjoin(lhs->type, rhs->type);
-      nd = new_node(ND_ADD, lhs, rhs);
-      nd->type = ty;
+      nd = new_node(ND_ADD, lhs, rhs, tyjoin(lhs->type, rhs->type));
 
       lhs = nd;
-      ty = lhs->type;
-      nd = new_node(ND_DEREF, lhs, NULL);
-      nd->type = ty->ptr_to;
+      nd = new_node(ND_DEREF, lhs, NULL, lhs->type->ptr_to);
 
       lhs = nd;
       if (i < nelem)
         rhs = elems[i];
       else
         rhs = new_node_num(0);
-      nd = new_node(ND_ASSIGN, lhs, rhs);
-      nd->type = lhs->type;
+      nd = new_node(ND_ASSIGN, lhs, rhs, lhs->type);
 
       cur->lhs = nd;
-      cur->rhs = new_node(ND_COMP_STMT, NULL, NULL);
+      cur->rhs = new_node(ND_COMP_STMT, NULL, NULL, NULL);
       cur = cur->rhs;
     }
     cur->kind = ND_NONE;

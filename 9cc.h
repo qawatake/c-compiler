@@ -326,7 +326,7 @@ Type *tyjoin(Type *lty, Type *rty);
 // sizeof に相当する役割
 Size size(Type *ty);
 
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
+Node *new_node(NodeKind kind, Node *lhs, Node *rhs, Type *ty);
 Node *new_node_num(int val);
 Node *parse_for_contents();
 int parse_array_literal(Node ***); // 配列要素の可変長配列を参照渡し & 配列要素数を返す

@@ -61,12 +61,13 @@ Size size(Type *ty)
   }
 }
 
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
+Node *new_node(NodeKind kind, Node *lhs, Node *rhs, Type *ty)
 {
   Node *node = calloc(1, sizeof(Node));
   node->kind = kind;
   node->lhs = lhs;
   node->rhs = rhs;
+  node->type = ty;
   return node;
 }
 
@@ -163,7 +164,7 @@ Node *parse_for_contents()
   expect("(");
   if (consume_reserve(";"))
   {
-    node->lhs = new_node(ND_NONE, NULL, NULL);
+    node->lhs = new_node(ND_NONE, NULL, NULL, NULL);
   }
   else
   {
@@ -173,21 +174,21 @@ Node *parse_for_contents()
 
   if (consume_reserve(";"))
   {
-    node->rhs = new_node(ND_WHILE, new_node_num(1), NULL);
+    node->rhs = new_node(ND_WHILE, new_node_num(1), NULL, NULL);
   }
   else
   {
-    node->rhs = new_node(ND_WHILE, expr(), NULL);
+    node->rhs = new_node(ND_WHILE, expr(), NULL, NULL);
     expect(";");
   }
 
   if (consume_reserve(")"))
   {
-    node->rhs->rhs = new_node(ND_COMP_STMT, NULL, NULL);
+    node->rhs->rhs = new_node(ND_COMP_STMT, NULL, NULL, NULL);
   }
   else
   {
-    node->rhs->rhs = new_node(ND_COMP_STMT, NULL, expr());
+    node->rhs->rhs = new_node(ND_COMP_STMT, NULL, expr(), NULL);
     expect(")");
   }
 
@@ -281,12 +282,12 @@ Node *stmt()
   if (consume_reserve("{")) // ブロック文
   {
     zoom_in();
-    node = new_node(ND_COMP_STMT, NULL, NULL);
+    node = new_node(ND_COMP_STMT, NULL, NULL, NULL);
     Node *cur = node;
     while (!consume_reserve("}"))
     {
       cur->lhs = stmt();
-      cur->rhs = new_node(ND_COMP_STMT, NULL, NULL);
+      cur->rhs = new_node(ND_COMP_STMT, NULL, NULL, NULL);
       cur = cur->rhs;
     }
     cur->kind = ND_NONE;
@@ -294,7 +295,7 @@ Node *stmt()
   }
   else if (consume(TK_RETURN))
   {
-    node = new_node(ND_RETURN, expr(), NULL);
+    node = new_node(ND_RETURN, expr(), NULL, NULL);
     expect(";");
   }
   else if (consume(TK_TYPEDEF))
@@ -304,7 +305,7 @@ Node *stmt()
       error("typedef の書式に誤りがあります");
     Tydef *tydef = newTydef(&var);
     add_typedef(tydef);
-    node = new_node(ND_NONE, NULL, NULL);
+    node = new_node(ND_NONE, NULL, NULL, NULL);
     expect(";");
   }
   else if (consume(TK_IF))
@@ -375,14 +376,13 @@ Node *expr()
       add_locals(lvar);
 
       Node *lhs = new_node_lvar(lvar);
-      node = new_node(ND_ASSIGN, lhs, rhs);
-      node->type = lhs->type;
+      node = new_node(ND_ASSIGN, lhs, rhs, lhs->type);
     }
     else
     {
       add_locals(lvar);
 
-      node = new_node(ND_NONE, NULL, NULL);
+      node = new_node(ND_NONE, NULL, NULL, NULL);
     }
     return node;
   }
@@ -399,8 +399,7 @@ Node *assign()
     {
       Node *lhs = node;
       Node *rhs = assign();
-      node = new_node(ND_ASSIGN, lhs, rhs);
-      node->type = lhs->type;
+      node = new_node(ND_ASSIGN, lhs, rhs, lhs->type);
       continue;
     }
     break;
@@ -414,20 +413,19 @@ Node *equality()
 
   for (;;)
   {
+    Type *ty = calloc(1, sizeof(Type));
+    ty->kind = TY_CHAR;
     if (consume_reserve("=="))
     {
-      node = new_node(ND_EQ, node, relational());
-      node->type = calloc(1, sizeof(Type));
-      node->type->kind = TY_INT;
+      node = new_node(ND_EQ, node, relational(), ty);
     }
     else if (consume_reserve("!="))
     {
-      node = new_node(ND_NE, node, relational());
-      node->type = calloc(1, sizeof(Type));
-      node->type->kind = TY_INT;
+      node = new_node(ND_NE, node, relational(), ty);
     }
     else
     {
+      free(ty);
       return node;
     }
   }
@@ -439,32 +437,27 @@ Node *relational()
 
   for (;;)
   {
+    Type *ty = calloc(1, sizeof(Type));
+    ty->kind = TY_CHAR;
     if (consume_reserve(">"))
     {
-      node = new_node(ND_L, add(), node);
-      node->type = calloc(1, sizeof(Type));
-      node->type->kind = TY_INT;
+      node = new_node(ND_L, add(), node, ty);
     }
     else if (consume_reserve("<"))
     {
-      node = new_node(ND_L, node, add());
-      node->type = calloc(1, sizeof(Type));
-      node->type->kind = TY_INT;
+      node = new_node(ND_L, node, add(), ty);
     }
     else if (consume_reserve(">="))
     {
-      node = new_node(ND_LE, add(), node);
-      node->type = calloc(1, sizeof(Type));
-      node->type->kind = TY_INT;
+      node = new_node(ND_LE, add(), node, ty);
     }
     else if (consume_reserve("<="))
     {
-      node = new_node(ND_LE, node, add());
-      node->type = calloc(1, sizeof(Type));
-      node->type->kind = TY_INT;
+      node = new_node(ND_LE, node, add(), ty);
     }
     else
     {
+      free(ty);
       return node;
     }
   }
@@ -479,16 +472,12 @@ Node *add()
     if (consume_reserve("+"))
     {
       Node *rhs = mul();
-      Type *ty = tyjoin(node->type, rhs->type);
-      node = new_node(ND_ADD, node, rhs);
-      node->type = ty;
+      node = new_node(ND_ADD, node, rhs, tyjoin(node->type, rhs->type));
     }
     else if (consume_reserve("-"))
     {
       Node *rhs = mul();
-      Type *ty = tyjoin(node->type, rhs->type);
-      node = new_node(ND_SUB, node, rhs);
-      node->type = ty;
+      node = new_node(ND_SUB, node, rhs, tyjoin(node->type, rhs->type));
     }
     else
     {
@@ -506,16 +495,12 @@ Node *mul()
     if (consume_reserve("*"))
     {
       Node *rhs = unary();
-      Type *ty = tyjoin(node->type, rhs->type);
-      node = new_node(ND_MUL, node, rhs);
-      node->type = ty;
+      node = new_node(ND_MUL, node, rhs, tyjoin(node->type, rhs->type));
     }
     else if (consume_reserve("/"))
     {
       Node *rhs = unary();
-      Type *ty = tyjoin(node->type, rhs->type);
-      node = new_node(ND_DIV, node, rhs);
-      node->type = ty;
+      node = new_node(ND_DIV, node, rhs, tyjoin(node->type, rhs->type));
     }
     else
     {
@@ -529,8 +514,7 @@ Node *unary()
   if (consume_reserve("-"))
   {
     Node *rhs = unary();
-    Node *node = new_node(ND_SUB, new_node_num(0), rhs);
-    node->type = rhs->type;
+    Node *node = new_node(ND_SUB, new_node_num(0), rhs, rhs->type);
     return node;
   }
   if (consume_reserve("+"))
@@ -540,17 +524,16 @@ Node *unary()
   if (consume_reserve("&"))
   {
     Node *lhs = unary();
-    Node *node = new_node(ND_ADDR, lhs, NULL);
-    node->type = calloc(1, sizeof(Type));
-    node->type->kind = TY_PTR;
-    node->type->ptr_to = lhs->type;
+    Type *ty = calloc(1, sizeof(Type));
+    ty->kind = TY_PTR;
+    ty->ptr_to = lhs->type;
+    Node *node = new_node(ND_ADDR, lhs, NULL, ty);
     return node;
   }
   if (consume_reserve("*"))
   {
     Node *lhs = unary();
-    Node *node = new_node(ND_DEREF, lhs, NULL);
-    node->type = lhs->type->ptr_to;
+    Node *node = new_node(ND_DEREF, lhs, NULL, lhs->type->ptr_to);
     return node;
   }
   if (consume(TK_SIZEOF))
@@ -569,12 +552,12 @@ Node *parse_func_args()
   {
     return NULL;
   }
-  node = new_node(ND_EXPR_STMT, NULL, expr());
+  node = new_node(ND_EXPR_STMT, NULL, expr(), NULL);
   cur = node;
   while (!consume_reserve(")"))
   {
     expect(",");
-    cur->lhs = new_node(ND_EXPR_STMT, NULL, expr());
+    cur->lhs = new_node(ND_EXPR_STMT, NULL, expr(), NULL);
     cur = cur->lhs;
   }
   return node;
@@ -582,7 +565,7 @@ Node *parse_func_args()
 
 Node *new_node_member(Node *parent, Token *tok)
 {
-  Node *node = new_node(ND_DOT, parent, NULL);
+  Node *node = new_node(ND_DOT, parent, NULL, NULL);
   node->name = tok->str;
   node->len = tok->len;
 
@@ -610,10 +593,8 @@ Node *comp()
       Node *inside = assign();
       expect("]");
       Type *ty = tyjoin(node->type, inside->type);
-      node = new_node(ND_ADD, node, inside);
-      node->type = ty;
-      node = new_node(ND_DEREF, node, NULL);
-      node->type = ty->ptr_to;
+      node = new_node(ND_ADD, node, inside, ty);
+      node = new_node(ND_DEREF, node, NULL, ty->ptr_to);
     }
     else if (consume_reserve("."))
     {
@@ -623,9 +604,7 @@ Node *comp()
     else if (consume_reserve("->"))
     {
       Token *tok = consume_ident();
-      Type *ty = node->type;
-      node = new_node(ND_DEREF, node, NULL);
-      node->type = ty->ptr_to;
+      node = new_node(ND_DEREF, node, NULL, node->type->ptr_to);
       node = new_node_member(node, tok);
     }
     else
