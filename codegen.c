@@ -40,6 +40,21 @@ static void switch_reg(RegKind lkind, RegKind rkind)
   printf("  pop %s\n", reg_str(rkind, SIZE_PTR));
 }
 
+static void memory_to_reg(RegKind reg_from, RegKind reg_to, Size s)
+{
+  switch (s)
+  {
+  case SIZE_CHAR:
+    printf("  movsx %s, byte ptr [%s]\n", reg_str(reg_to, SIZE_PTR), reg_str(reg_from, SIZE_PTR));
+    break;
+  case SIZE_INT:
+    printf("  mov %s, dword ptr [%s]\n", reg_str(reg_to, s), reg_str(reg_from, SIZE_PTR));
+    break;
+  case SIZE_PTR:
+    printf("  mov %s, qword ptr [%s]\n", reg_str(reg_to, s), reg_str(reg_from, SIZE_PTR));
+  }
+}
+
 void gen_lval(Node *node)
 {
   switch (node->kind)
@@ -231,9 +246,7 @@ void gen(Node *node)
   case ND_EXPR_STMT: // つながった expr の数だけスタックに積み上がる
     gen(node->rhs);
     if (node->lhs != NULL)
-    {
       gen(node->lhs);
-    }
     return;
   case ND_NUM:
     printf("  push %d\n", node->val);
@@ -245,37 +258,13 @@ void gen(Node *node)
       return;
 
     printf("  pop rax\n");
-    switch (node->type->kind)
-    {
-    case TY_CHAR:
-      printf("  movsx eax, byte ptr [rax]\n");
-      break;
-    case TY_INT_LITERAL:
-    case TY_INT:
-      printf("  mov eax, [rax]\n");
-      break;
-    case TY_PTR:
-      printf("  mov rax, [rax]\n");
-      break;
-    }
+    memory_to_reg(REG_RAX, REG_RAX, size(node->type));
     printf("  push rax\n");
     return;
   case ND_DOT:
     gen_lval(node);
     printf("  pop rax\n");
-    switch (node->type->kind)
-    {
-    case TY_CHAR:
-      printf("  movsx eax, byte ptr [rax]\n");
-      break;
-    case TY_INT_LITERAL:
-    case TY_INT:
-      printf("  mov eax, [rax]\n");
-      break;
-    case TY_PTR:
-      printf("  mov rax, [rax]\n");
-      break;
-    }
+    memory_to_reg(REG_RAX, REG_RAX, size(node->type));
     printf("  push rax\n");
     return;
   case ND_STR:
@@ -288,22 +277,8 @@ void gen(Node *node)
   case ND_DEREF:
     gen(node->lhs);
     printf("  pop rax\n");
-    switch (node->type->kind)
-    {
-    case TY_CHAR:
-      printf("  movsx eax, byte ptr [rax]\n");
-      break;
-    case TY_INT_LITERAL:
-    case TY_INT:
-      printf("  mov eax, [rax]\n");
-      break;
-    case TY_PTR:
-      printf("  mov rax, [rax]\n");
-      break;
-    case TY_ARRAY: // 配列へのポインタ
-      break;
-    }
-
+    if (node->type->kind != TY_ARRAY) // *(配列へのポインタ) が指すアドレス = 配列へのポインタが指すアドレス
+      memory_to_reg(REG_RAX, REG_RAX, size(node->type));
     printf("  push rax\n");
     return;
   case ND_CALL:
@@ -312,24 +287,9 @@ void gen(Node *node)
   case ND_ASSIGN:
     gen_lval(node->lhs);
     gen(node->rhs);
-
     printf("  pop rdi\n");
     printf("  pop rax\n");
-
-    switch (node->type->kind)
-    {
-    case TY_CHAR:
-      printf("  mov [rax], dil\n");
-      break;
-    case TY_INT_LITERAL:
-    case TY_INT:
-      printf("  mov [rax], edi\n");
-      break;
-    case TY_PTR:
-      printf("  mov [rax], rdi\n");
-      break;
-    }
-
+    printf("  mov [rax], %s\n", reg_str(REG_RDI, size(node->type)));
     printf("  push rdi\n");
     return;
   case ND_IF:
