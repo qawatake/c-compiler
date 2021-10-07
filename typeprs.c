@@ -11,6 +11,30 @@ static Type *ident(Var *var);
 static Type *root();
 static Type *strct();
 
+Type *new_type(TypeKind kind)
+{
+  Type *ty = calloc(1, sizeof(Type));
+  ty->kind = kind;
+  return ty;
+}
+
+Type *new_type_ptr(Type *ptr_to)
+{
+  Type *ty = calloc(1, sizeof(Type));
+  ty->kind = TY_PTR;
+  ty->ptr_to = ptr_to;
+  return ty;
+}
+
+Type *new_type_array(Type *ptr_to, int array_size)
+{
+  Type *ty = calloc(1, sizeof(Type));
+  ty->kind = TY_ARRAY;
+  ty->ptr_to = ptr_to;
+  ty->array_size = array_size;
+  return ty;
+}
+
 Type *tyjoin(Type *lty, Type *rty)
 {
   if (lty->kind > rty->kind)
@@ -18,9 +42,7 @@ Type *tyjoin(Type *lty, Type *rty)
 
   if (rty->kind == TY_ARRAY)
   {
-    Type *newty = calloc(1, sizeof(Type));
-    newty->kind = TY_PTR;
-    newty->ptr_to = rty->ptr_to;
+    Type *newty = new_type_ptr(rty->ptr_to);
     return newty;
   }
   else
@@ -101,9 +123,7 @@ Type *ptr(Var *var)
   Type *parent = NULL;
   while (consume_reserve("*"))
   {
-    Type *newty = calloc(1, sizeof(Type));
-    newty->kind = TY_PTR;
-    newty->ptr_to = parent;
+    Type *newty = new_type_ptr(parent);
     parent = newty;
   }
 
@@ -138,14 +158,12 @@ Type *seq(Var *var)
 
   if (consume_reserve("["))
   {
-    Type *newty = calloc(1, sizeof(Type));
-    newty->kind = TY_ARRAY;
     int num;
     if (!consume_num(&num))
     {
       num = -1;
     }
-    newty->array_size = num;
+    Type *newty = new_type_array(NULL, num);
     if (ty == NULL)
     {
       ty = newty;
@@ -161,9 +179,7 @@ Type *seq(Var *var)
 
   while (consume_reserve("["))
   {
-    Type *newty = calloc(1, sizeof(Type));
-    newty->kind = TY_ARRAY;
-    newty->array_size = expect_number();
+    Type *newty = new_type_array(NULL, expect_number());
     head->ptr_to = newty;
     head = newty;
     expect("]");
@@ -195,14 +211,12 @@ Type *root()
   Type *ty = NULL;
   if (consume(TK_INT))
   {
-    ty = calloc(1, sizeof(Type));
-    ty->kind = TY_INT;
+    ty = new_type(TY_INT);
     ty->ptr_to = NULL;
   }
   else if (consume(TK_CHAR))
   {
-    ty = calloc(1, sizeof(Type));
-    ty->kind = TY_CHAR;
+    ty = new_type(TY_CHAR);
     ty->ptr_to = NULL;
   }
   else if (consume(TK_STRUCT))
@@ -223,8 +237,7 @@ Type *root()
 
 Type *strct()
 {
-  Type *ty = calloc(1, sizeof(Type));
-  ty->kind = TY_STRUCT;
+  Type *ty = new_type(TY_STRUCT);
   ty->ptr_to = NULL;
 
   Token *tok = consume_ident();

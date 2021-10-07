@@ -25,9 +25,7 @@ Node *new_node_num(int val)
   node->kind = ND_NUM;
   node->val = val;
 
-  node->type = calloc(1, sizeof(Type));
-  node->type->kind = TY_INT_LITERAL;
-  node->type->ptr_to = NULL;
+  node->type = new_type(TY_INT_LITERAL);
   return node;
 }
 
@@ -54,18 +52,10 @@ Node *new_node_gvar(GVar *gvar)
 
 Node *new_node_str(String *str)
 {
-  Node *node = calloc(1, sizeof(Node));
-  Type *btype = calloc(1, sizeof(Type));
-  Type *ty = calloc(1, sizeof(Type));
+  Type *btype = new_type(TY_CHAR);
+  Type *ty = new_type_array(btype, str->len - 1);
 
-  btype->kind = TY_CHAR;
-  btype->ptr_to = NULL;
-  ty->kind = TY_ARRAY;
-  ty->ptr_to = btype;
-  ty->array_size = str->len - 1;
-
-  node->kind = ND_STR;
-  node->type = ty;
+  Node *node = new_node(ND_STR, NULL, NULL, ty);
   node->serial = str->serial;
   return node;
 }
@@ -355,8 +345,7 @@ Node *equality()
 
   for (;;)
   {
-    Type *ty = calloc(1, sizeof(Type));
-    ty->kind = TY_CHAR;
+    Type *ty = new_type(TY_CHAR);
     if (consume_reserve("=="))
     {
       node = new_node(ND_EQ, node, relational(), ty);
@@ -379,8 +368,7 @@ Node *relational()
 
   for (;;)
   {
-    Type *ty = calloc(1, sizeof(Type));
-    ty->kind = TY_CHAR;
+    Type *ty = new_type(TY_CHAR);
     if (consume_reserve(">"))
     {
       node = new_node(ND_L, add(), node, ty);
@@ -466,9 +454,7 @@ Node *unary()
   if (consume_reserve("&"))
   {
     Node *lhs = unary();
-    Type *ty = calloc(1, sizeof(Type));
-    ty->kind = TY_PTR;
-    ty->ptr_to = lhs->type;
+    Type *ty = new_type_ptr(lhs->type);
     Node *node = new_node(ND_ADDR, lhs, NULL, ty);
     return node;
   }
@@ -602,10 +588,7 @@ Node *primary()
     Node **elems;
     int nelem = array_literal(&elems);
 
-    Type *ty = calloc(1, sizeof(Type));
-    ty->kind = TY_ARRAY;
-    ty->array_size = nelem;
-    ty->ptr_to = (nelem > 0) ? elems[0]->type : NULL;
+    Type *ty = new_type_array((nelem > 0) ? elems[0]->type : NULL, nelem);
 
     Node *node = new_node(ND_ARRAY, NULL, NULL, ty);
     node->elems = elems;

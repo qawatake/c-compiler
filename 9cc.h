@@ -53,25 +53,28 @@ typedef enum
   SIZE_PTR = 8,
 } Size;
 
+// 型の種類
+typedef enum
+{
+  TY_INT_LITERAL, // 整数リテラル
+  TY_CHAR,        // char
+  TY_INT,         // int
+  TY_PTR,         // ポインタ
+  TY_ARRAY,       // 配列
+  TY_STRUCT,      // struct
+} TypeKind;
+
 // 変数の型
 typedef struct Type Type;
 struct Type
 {
-  enum
-  {
-    TY_INT_LITERAL, // 整数リテラル
-    TY_CHAR,        // char
-    TY_INT,         // int
-    TY_PTR,         // ポインタ
-    TY_ARRAY,       // 配列
-    TY_STRUCT,      // struct
-  } kind;           // int or pointer
-  Type *ptr_to;     // ~ 型へのポインタ
-  int array_size;   // 配列の要素数 (未設定の場合は -1)
-  Type **members;   // kind が TY_STRUCT の場合に使う. メンバ要素の可変長配列
-  int offset;       // 構造体のメンバの場合に使う. 構造体内のオフセット
-  char *name;       // 構造体のメンバの場合に使う
-  int len;          // 構造体のメンバの場合に使う
+  TypeKind kind;  // int or pointer
+  Type *ptr_to;   // ~ 型へのポインタ
+  int array_size; // 配列の要素数 (未設定の場合は -1)
+  Type **members; // kind が TY_STRUCT の場合に使う. メンバ要素の可変長配列
+  int offset;     // 構造体のメンバの場合に使う. 構造体内のオフセット
+  char *name;     // 構造体のメンバの場合に使う
+  int len;        // 構造体のメンバの場合に使う
 };
 
 // 変数の共通要素
@@ -193,7 +196,8 @@ struct Scope
   int offset; // 子スコープで使用された最大のメモリ数
 };
 
-typedef enum {
+typedef enum
+{
   REG_RDI,
   REG_RSI,
   REG_RDX,
@@ -308,6 +312,11 @@ Token *tokenize(char *p);
 /* typeprs.c
   型宣言を解析
 */
+
+// 新しい Type を生成
+Type *new_type(TypeKind kind);
+Type *new_type_ptr(Type *ptr_to);
+Type *new_type_array(Type *ptr_to, int array_size);
 
 // 合成したノードの型を返す
 Type *tyjoin(Type *lty, Type *rty);
