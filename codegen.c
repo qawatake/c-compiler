@@ -26,9 +26,18 @@ static char *reg_str(RegKind kind, Size s)
       {"rcx", "ecx", "cl"},
       {"r8", "r8d", "r8b"},
       {"r9", "r9d", "r9b"},
+      {"rax", "eax", "al"},
   };
 
   return regs[kind][size_id];
+}
+
+static void switch_reg(RegKind lkind, RegKind rkind)
+{
+  printf("  push %s\n", reg_str(lkind, SIZE_PTR));
+  printf("  push %s\n", reg_str(rkind, SIZE_PTR));
+  printf("  pop %s\n", reg_str(lkind, SIZE_PTR));
+  printf("  pop %s\n", reg_str(rkind, SIZE_PTR));
 }
 
 void gen_lval(Node *node)
@@ -376,55 +385,6 @@ void gen(Node *node)
     printf("  pop r12\n");
     printf("  ret\n");
     return;
-  case ND_ADD:
-    if (node->type->kind == TY_PTR)
-    {
-      // if (node->lhs->type->kind == TY_PTR && node->rhs->type->kind == TY_PTR)
-      //   error("ポインタとポインタの演算が行われています");
-
-      if (node->lhs->type->kind == TY_PTR || node->lhs->type->kind == TY_ARRAY)
-      {
-        gen(node->lhs);
-        gen(node->rhs);
-      }
-      if (node->rhs->type->kind == TY_PTR || node->rhs->type->kind == TY_ARRAY)
-      {
-        gen(node->rhs);
-        gen(node->lhs);
-      }
-      printf("  pop rax\n");
-      printf("  mov rdi, %d\n", size(node->type->ptr_to));
-      printf("  imul rax, rdi\n");
-      printf("  push rax\n");
-    }
-    else
-    {
-      gen(node->lhs);
-      gen(node->rhs);
-    }
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
-    printf("  add rax, rdi\n");
-    printf("  push rax\n");
-    return;
-  case ND_SUB:
-    gen(node->lhs);
-    gen(node->rhs);
-    if (node->type->kind == TY_PTR)
-    {
-      if (node->rhs->type->kind == TY_PTR || node->rhs->type->kind == TY_ARRAY)
-        error("引き算の左辺にポインタが配置されています");
-
-      printf("  pop rax\n");
-      printf("  mov rdi, %d\n", size(node->type->ptr_to));
-      printf("  imul rax, rdi\n");
-      printf("  push rax\n");
-    }
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
-    printf("  sub rax, rdi\n");
-    printf("  push rax\n");
-    return;
   }
 
   gen(node->lhs);
@@ -435,6 +395,24 @@ void gen(Node *node)
 
   switch (node->kind)
   {
+  case ND_ADD:
+    if (node->type->kind == TY_PTR)
+    {
+      if (node->rhs->type->kind == TY_PTR || node->rhs->type->kind == TY_ARRAY)
+        switch_reg(REG_RAX, REG_RDI);
+      printf("  mov rsi, %d\n", size(node->type->ptr_to));
+      printf("  imul rdi, rsi\n");
+    }
+    printf("  add rax, rdi\n");
+    break;
+  case ND_SUB:
+    if (node->type->kind == TY_PTR)
+    {
+      printf("  mov rsi, %d\n", size(node->type->ptr_to));
+      printf("  imul rdi, rsi\n");
+    }
+    printf("  sub rax, rdi\n");
+    break;
   case ND_MUL:
     printf("  imul rax, rdi\n");
     break;

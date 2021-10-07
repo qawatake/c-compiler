@@ -51,7 +51,7 @@ void palloc2(int ***q, int a, int b)
   *(p[1]) = b;
 }
 EOF
-
+assert 13 "int main(){int a[3]; a[1] = 13; return *(a + 2 - 1);}"
 assert 0 "int main(){struct {} x; return sizeof x;}"
 assert 4 "int main(){struct {int a;} x; return sizeof x;}"
 assert 8 "int main(){struct{char a; char b; int c;} x; return sizeof x;}"

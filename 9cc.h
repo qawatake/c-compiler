@@ -204,6 +204,7 @@ typedef enum
   REG_RCX,
   REG_R8,
   REG_R9,
+  REG_RAX,
 } RegKind;
 
 /* グローバル変数の宣言 */
