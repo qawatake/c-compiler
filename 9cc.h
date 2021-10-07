@@ -282,7 +282,12 @@ bool consume_num(int *num);
 // 次のトークンが期待している記号であれば, 真を返す
 // それ以外の場合には偽を返す
 // いずれの場合もトークンは進めない
-bool check(char *op);
+bool check_reserve(char *op);
+
+// 次のトークンが期待している記号であれば, 真を返す
+// それ以外の場合には偽を返す
+// いずれの場合もトークンは進めない
+bool check(TokenKind kind);
 
 // 次のトークンが typedef された型であれば, トークンを1つ進めて, 該当する Tydef * を返す
 // それ以外の場合には NULL を返す

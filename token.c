@@ -69,11 +69,14 @@ Tydef *consume_typedefs()
   return NULL;
 }
 
-bool check(char *op)
+bool check_reserve(char *op)
 {
-  if (token->kind != TK_RESERVED || token->len != strlen(op) || memcmp(token->str, op, token->len))
-    return false;
-  return true;
+  return token->kind == TK_RESERVED && token->len == strlen(op) && !memcmp(token->str, op, token->len);
+}
+
+bool check(TokenKind kind)
+{
+  return token->kind == kind;
 }
 
 void expect(char *op)

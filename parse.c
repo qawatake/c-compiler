@@ -5,9 +5,10 @@
 #include <string.h>
 #include "9cc.h"
 
-static int array_literal();
+static Node *array_literal();
 static Node *for_sentence();
 static Node *args();
+static Node *if_else();
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs, Type *ty)
 {
@@ -97,6 +98,7 @@ Function *newFunction(Var *var)
 
 Node *for_sentence()
 {
+  consume(TK_FOR);
   Node *node = new_node(ND_FOR, NULL, NULL, NULL);
   expect("(");
   if (consume_reserve(";"))
@@ -133,33 +135,57 @@ Node *for_sentence()
   return node;
 }
 
-int array_literal(Node ***nds)
+Node *if_else()
 {
-  *nds = malloc(10 * sizeof(Node *));
+  consume(TK_IF);
+  Node *node = new_node(ND_IF, NULL, NULL, NULL);
+  expect("(");
+  node->lhs = expr();
+  expect(")");
+  Node *node_true;
+  node_true = stmt();
+  if (consume(TK_ELSE))
+  {
+    Node *node_else = new_node(ND_ELSE, node_true, stmt(), NULL);
+    node->rhs = node_else;
+  }
+  else
+  {
+    node->rhs = node_true;
+  }
+  return node;
+}
+
+Node *array_literal()
+{
+  Node *node;
+  Node **elems = malloc(10 * sizeof(Node *));
   int size = 10;
   int id = 0;
   expect("{");
   if (consume_reserve("}"))
   {
-    (*nds)[0] = NULL;
-    return 0;
+    elems[0] = NULL;
+    return new_node(ND_ARRAY, NULL, NULL, new_type_array(NULL, 0));
   }
 
-  (*nds)[id] = assign();
+  elems[0] = assign();
   id++;
   while (consume_reserve(","))
   {
-    (*nds)[id] = assign();
+    elems[id] = assign();
     id++;
     if (id >= size)
     {
       size *= 2;
-      *nds = realloc(*nds, size * sizeof(Node *));
+      elems = realloc(elems, size * sizeof(Node *));
     }
   }
   expect("}");
-  (*nds)[id] = NULL;
-  return id;
+
+  node = new_node(ND_ARRAY, NULL, NULL, new_type_array(elems[0]->type, id));
+  node->elems = elems;
+  return node;
 }
 
 void program()
@@ -186,7 +212,7 @@ void program()
           break;
         }
       }
-      if (!check("{"))
+      if (!check_reserve("{"))
         expect("{");
 
       Function *fn = newFunction(&var);
@@ -245,24 +271,10 @@ Node *stmt()
     node = new_node(ND_NONE, NULL, NULL, NULL);
     expect(";");
   }
-  else if (consume(TK_IF))
+  else if (check(TK_IF))
   {
     zoom_in();
-    node = new_node(ND_IF, NULL, NULL, NULL);
-    expect("(");
-    node->lhs = expr();
-    expect(")");
-    Node *node_true;
-    node_true = stmt();
-    if (consume(TK_ELSE))
-    {
-      Node *node_else = new_node(ND_ELSE, node_true, stmt(), NULL);
-      node->rhs = node_else;
-    }
-    else
-    {
-      node->rhs = node_true;
-    }
+    node = if_else();
     zoom_out();
   }
   else if (consume(TK_WHILE))
@@ -273,7 +285,7 @@ Node *stmt()
     expect(")");
     node->rhs = stmt();
   }
-  else if (consume(TK_FOR))
+  else if (check(TK_FOR))
   {
     zoom_in();
     node = for_sentence();
@@ -476,10 +488,9 @@ Node *args()
 {
   Node *node;
   Node *cur;
+  consume_reserve("(");
   if (consume_reserve(")"))
-  {
     return NULL;
-  }
   node = new_node(ND_EXPR_STMT, NULL, expr(), NULL);
   cur = node;
   while (!consume_reserve(")"))
@@ -555,7 +566,8 @@ Node *primary()
   Token *tok = consume_ident();
   if (tok)
   {
-    if (consume_reserve("("))
+    // 関数呼び出し
+    if (check_reserve("("))
     {
       Function *fn = find_func(tok);
       Type *ty = fn ? fn->retype : NULL;
@@ -565,16 +577,19 @@ Node *primary()
       return node;
     }
 
+    // ローカル変数
     LVar *lvar = find_lvar(tok);
-    GVar *gvar = find_gvar(tok->str, tok->len);
     if (lvar)
       return new_node_lvar(lvar);
-    else if (gvar)
+
+    // グローバル変数
+    GVar *gvar = find_gvar(tok->str, tok->len);
+    if (gvar)
       return new_node_gvar(gvar);
-    else
-      error("宣言されていない変数です");
+    error("宣言されていない変数です");
   }
 
+  // 文字列リテラル
   String *str = consume_str();
   if (str)
   {
@@ -583,17 +598,9 @@ Node *primary()
     return node;
   }
 
-  if (check("{"))
-  {
-    Node **elems;
-    int nelem = array_literal(&elems);
-
-    Type *ty = new_type_array((nelem > 0) ? elems[0]->type : NULL, nelem);
-
-    Node *node = new_node(ND_ARRAY, NULL, NULL, ty);
-    node->elems = elems;
-    return node;
-  }
+  // 配列リテラル
+  if (check_reserve("{"))
+    return array_literal();
 
   // そうでなければ数値のはず
   return new_node_num(expect_number());

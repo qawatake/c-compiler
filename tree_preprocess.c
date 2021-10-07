@@ -23,7 +23,7 @@ static void str_to_array(Type *ty, Node **pnode)
 
   if (node->kind == ND_ARRAY)
   {
-    for (int id = 0; node->elems[id]; id++)
+    for (int id = 0; id < node->type->array_size; id++)
     {
       str_to_array(ty->ptr_to, &(node->elems[id]));
     }
