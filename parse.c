@@ -107,8 +107,7 @@ Function *newFunction(Var *var)
 
 Node *for_sentence()
 {
-  Node *node = calloc(1, sizeof(Node));
-  node->kind = ND_FOR;
+  Node *node = new_node(ND_FOR, NULL, NULL, NULL);
   expect("(");
   if (consume_reserve(";"))
   {
@@ -259,8 +258,7 @@ Node *stmt()
   else if (consume(TK_IF))
   {
     zoom_in();
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_IF;
+    node = new_node(ND_IF, NULL, NULL, NULL);
     expect("(");
     node->lhs = expr();
     expect(")");
@@ -268,10 +266,7 @@ Node *stmt()
     node_true = stmt();
     if (consume(TK_ELSE))
     {
-      Node *node_else = calloc(1, sizeof(Node));
-      node_else->kind = ND_ELSE;
-      node_else->lhs = node_true;
-      node_else->rhs = stmt();
+      Node *node_else = new_node(ND_ELSE, node_true, stmt(), NULL);
       node->rhs = node_else;
     }
     else
@@ -282,8 +277,7 @@ Node *stmt()
   }
   else if (consume(TK_WHILE))
   {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_WHILE;
+    node = new_node(ND_WHILE, NULL, NULL, NULL);
     expect("(");
     node->lhs = expr();
     expect(")");
@@ -577,18 +571,9 @@ Node *primary()
   {
     if (consume_reserve("("))
     {
-      Node *node = calloc(1, sizeof(Node));
       Function *fn = find_func(tok);
-      if (fn)
-      {
-        node->type = fn->retype;
-      }
-      else
-      {
-        node->type = NULL;
-      }
-      node->kind = ND_CALL;
-      node->lhs = args();
+      Type *ty = fn ? fn->retype : NULL;
+      Node *node = new_node(ND_CALL, args(), NULL, ty);
       node->name = tok->str;
       node->len = tok->len;
       return node;
@@ -617,14 +602,12 @@ Node *primary()
     Node **elems;
     int nelem = array_literal(&elems);
 
-    Type *ty = calloc(1, sizeof(Node));
+    Type *ty = calloc(1, sizeof(Type));
     ty->kind = TY_ARRAY;
     ty->array_size = nelem;
     ty->ptr_to = (nelem > 0) ? elems[0]->type : NULL;
 
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_ARRAY;
-    node->type = ty;
+    Node *node = new_node(ND_ARRAY, NULL, NULL, ty);
     node->elems = elems;
     return node;
   }

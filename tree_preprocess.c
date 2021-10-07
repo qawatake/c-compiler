@@ -10,9 +10,7 @@ static void str_to_array(Type *ty, Node **pnode)
   {
     // 文字列ノードを配列リテラルノードに変更
     String *str = find_str(node->serial);
-    Node *nd = calloc(1, sizeof(Node));
-    nd->kind = ND_ARRAY;
-    nd->type = ty;
+    Node *nd = new_node(ND_ARRAY, NULL, NULL, ty);
     nd->elems = malloc((str->len - 1) * sizeof(Node *));
     for (int i = 0; i < str->len - 2; i++)
     {
