@@ -18,6 +18,7 @@ typedef enum
   TK_SIZEOF,   // sizeof
   TK_STRUCT,   // struct
   TK_TYPEDEF,  // typedef
+  TK_VOID,     // void
   TK_IDENT,    // 識別子
   TK_NUM,      // 整数トークン
   TK_STR,      // 文字列トークン
@@ -62,6 +63,7 @@ typedef enum
   TY_PTR,         // ポインタ
   TY_ARRAY,       // 配列
   TY_STRUCT,      // struct
+  TY_VOID,        // void
 } TypeKind;
 
 // 変数の型

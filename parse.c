@@ -204,8 +204,11 @@ void program()
         {
           Var var;
           assr(&var);
-          LVar *lvar = newLVar(&var);
-          add_locals(lvar);
+          if (var.name) // 型宣言に識別子がない場合にはスキップ (例: int main(void))
+          {
+            LVar *lvar = newLVar(&var);
+            add_locals(lvar);
+          }
           if (consume_reserve(","))
             continue;
           expect(")");

@@ -74,11 +74,11 @@ Size size(Type *ty)
 
   switch (ty->kind)
   {
+  case TY_INT:
   case TY_INT_LITERAL:
     return SIZE_INT;
-  case TY_INT:
-    return SIZE_INT;
   case TY_CHAR:
+  case TY_VOID:
     return SIZE_CHAR;
   case TY_PTR:
     return SIZE_PTR;
@@ -91,6 +91,9 @@ Size size(Type *ty)
 
 bool assr(Var *var)
 {
+  var->name = NULL;
+  var->len = 0;
+
   Type *btype = root();
   if (!btype)
     return false;
@@ -202,8 +205,8 @@ Type *ident(Var *var)
     var->len = tok->len;
     return NULL;
   }
-
-  error("変数宣言が失敗しました");
+  return NULL;
+  // error("変数宣言が失敗しました");
 }
 
 Type *root()
@@ -212,16 +215,18 @@ Type *root()
   if (consume(TK_INT))
   {
     ty = new_type(TY_INT);
-    ty->ptr_to = NULL;
   }
   else if (consume(TK_CHAR))
   {
     ty = new_type(TY_CHAR);
-    ty->ptr_to = NULL;
   }
   else if (consume(TK_STRUCT))
   {
     ty = strct();
+  }
+  else if (consume(TK_VOID))
+  {
+    ty = new_type(TY_VOID);
   }
   else
   {

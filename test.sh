@@ -51,20 +51,6 @@ void palloc2(int ***q, int a, int b)
   *(p[1]) = b;
 }
 EOF
-assert 13 "int main(){int a[3]; a[1] = 13; return *(a + 2 - 1);}"
-assert 0 "int main(){struct {} x; return sizeof x;}"
-assert 4 "int main(){struct {int a;} x; return sizeof x;}"
-assert 8 "int main(){struct{char a; char b; int c;} x; return sizeof x;}"
-assert 12 "int main(){struct{char a; char b; int c; char d;} x; return sizeof x;}"
-assert 3 "int main(){struct{int a;} x; x.a = 3; return x.a;}"
-assert 8 "int main(){struct{char a; int b;} x; x.a = 3; x.b = 5; return x.a + x.b;}"
-assert 11 "int main(){struct{struct{char a;} b; int c;} x; x.b.a = 1; x.c = 2; return x.b.a + x.c + sizeof x;}"
-assert 11 "struct{struct{char a;} b; int c;} x; int main(){x.b.a = 1; x.c = 2; return x.b.a + x.c + sizeof x;}"
-assert 8 "int main(){struct{char a[3]; int b;} x; x.a[0] = 1; x.a[2] = 3; x.b = 4; return x.a[0] + x.a[2] + x.b;}"
-assert 8 "int main(){struct { char a; int b; } x; struct { char a; int b; } *p = &x; x.a=3; x.b=5; return p->a+p->b;}"
-assert 8 "int main(){struct tag { char a; int b; } x; struct tag *p = &x; x.a=3; x.b=5; return p->a+p->b;}"
-assert 3 "int main(){typedef int foo; foo x = 3; return x;}"
-assert 8 "int main(){struct tag { char a; int b; } x; typedef struct tag tag; tag *p = &x; x.a=3; x.b=5; return p->a+p->b;}"
 
 assert 0 "int main(){0;}"
 assert 42 "int main(){42;}"
@@ -171,6 +157,22 @@ assert 33 "int x[3] = {1, 2 + 3, 4 + 5 + 6}; int main(){return sizeof(x) + x[0] 
 assert 33 "int x[] = {1, 2 + 3, 4 + 5 + 6}; int main(){return sizeof(x) + x[0] + x[1] + x[2];}"
 assert 2 "int a; int *x[] = {&a, &a +1}; int main(){a = 2; return *x[0];}"
 assert 7 "int a[3]; int *x[3] = {a, a+1, a+2}; int main(){a[0] = 1; a[1] = 2; a[2] = 4; return *x[0] + *x[1] + *x[2];}"
+assert 0 "int main(){struct {} x; return sizeof x;}"
+assert 4 "int main(){struct {int a;} x; return sizeof x;}"
+assert 8 "int main(){struct{char a; char b; int c;} x; return sizeof x;}"
+assert 12 "int main(){struct{char a; char b; int c; char d;} x; return sizeof x;}"
+assert 3 "int main(){struct{int a;} x; x.a = 3; return x.a;}"
+assert 8 "int main(){struct{char a; int b;} x; x.a = 3; x.b = 5; return x.a + x.b;}"
+assert 11 "int main(){struct{struct{char a;} b; int c;} x; x.b.a = 1; x.c = 2; return x.b.a + x.c + sizeof x;}"
+assert 11 "struct{struct{char a;} b; int c;} x; int main(){x.b.a = 1; x.c = 2; return x.b.a + x.c + sizeof x;}"
+assert 8 "int main(){struct{char a[3]; int b;} x; x.a[0] = 1; x.a[2] = 3; x.b = 4; return x.a[0] + x.a[2] + x.b;}"
+assert 8 "int main(){struct { char a; int b; } x; struct { char a; int b; } *p = &x; x.a=3; x.b=5; return p->a+p->b;}"
+assert 8 "int main(){struct tag { char a; int b; } x; struct tag *p = &x; x.a=3; x.b=5; return p->a+p->b;}"
+assert 3 "int main(){typedef int foo; foo x = 3; return x;}"
+assert 8 "int main(){struct tag { char a; int b; } x; typedef struct tag tag; tag *p = &x; x.a=3; x.b=5; return p->a+p->b;}"
+assert 13 "int main(){int a[3]; a[1] = 13; return *(a + 2 - 1);}"
+assert 1 "int main(){int a; void *x = &a; int *b = x; a = 1; return *b;}"
+assert 1 "int x; void set1(void){x = 1;} int main(){set1(); return x;}"
 
 # 出力されるアセンブリの比較
 cmp 'int main(){char x[6] = "hello"; return x[1];}' 'int main(){char x[] = "hello"; return x[1];}'

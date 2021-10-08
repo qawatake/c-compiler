@@ -292,6 +292,13 @@ Token *tokenize(char *p)
       continue;
     }
 
+    if (strncmp(p, "void", 4) == 0 && !is_alnum(p[4]))
+    {
+      cur = new_token(TK_VOID, cur, p, 4);
+      p += 4;
+      continue;
+    }
+
     if (isalpha(*p))
     {
       char *q = p + 1;
